@@ -16,7 +16,7 @@ function TreeNodeRow({
   depth: number
   onContextMenu: (e: React.MouseEvent, branch: Branch) => void
 }): React.JSX.Element {
-  const [expanded, setExpanded] = useState(true)
+  const [expanded, setExpanded] = useState(false)
   const repoPath = useRepoStore((s) => s.repoPath)
   const hasChildren = node.children.size > 0
   const isHead = !!node.branch?.isHead
@@ -89,7 +89,7 @@ function Section({
   branches: Branch[]
   onContextMenu: (e: React.MouseEvent, branch: Branch) => void
 }): React.JSX.Element {
-  const [expanded, setExpanded] = useState(true)
+  const [expanded, setExpanded] = useState(false)
   const tree = useMemo(() => buildTree(branches), [branches])
 
   if (branches.length === 0) return <></>
