@@ -21,6 +21,12 @@ export const stageFile = (repoPath: string, path: string) => run(repoPath, ['add
 export const unstageFile = (repoPath: string, path: string) =>
   run(repoPath, ['restore', '--staged', '--', path])
 
+export const stagePaths = (repoPath: string, paths: string[]) =>
+  run(repoPath, ['add', '--', ...paths])
+
+export const unstagePaths = (repoPath: string, paths: string[]) =>
+  run(repoPath, ['restore', '--staged', '--', ...paths])
+
 export const discardChanges = (repoPath: string, path: string) =>
   run(repoPath, ['checkout', '--', path])
 

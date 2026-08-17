@@ -12771,10 +12771,10 @@ function TopBar() {
       }
     ),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "ml-auto flex gap-1.5", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "ghost", onClick: refresh, children: "⟳ Refresh" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "primary", onClick: push, children: "Push" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "default", onClick: fetch, children: "Fetch" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "default", onClick: pull, children: "Pull" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "default", onClick: push, children: "Push" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "ghost", onClick: refresh, children: "⟳ Refresh" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "ghost", onClick: closeRepo, children: "Close" })
     ] })
   ] });
@@ -12924,15 +12924,80 @@ function BranchContextMenu({
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsx(ContextMenu, { x, y, items, onClose });
 }
+function IconChanges({ className = "h-4 w-4" }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { viewBox: "0 0 24 24", fill: "none", className, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "path",
+    {
+      d: "M4 20h4l10.5-10.5a2.121 2.121 0 0 0-3-3L5 17v3Z",
+      stroke: "currentColor",
+      strokeWidth: 1.7,
+      strokeLinecap: "round",
+      strokeLinejoin: "round"
+    }
+  ) });
+}
+function IconLog({ className = "h-4 w-4" }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { viewBox: "0 0 24 24", fill: "none", className, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "6", cy: "6", r: "2", stroke: "currentColor", strokeWidth: 1.7 }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "6", cy: "18", r: "2", stroke: "currentColor", strokeWidth: 1.7 }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M6 8v8", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M10 6h8M10 18h8", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round" })
+  ] });
+}
+function IconBranch({ className = "h-3.5 w-3.5" }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { viewBox: "0 0 24 24", fill: "none", className, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "6", cy: "6", r: "2", stroke: "currentColor", strokeWidth: 1.7 }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "6", cy: "18", r: "2", stroke: "currentColor", strokeWidth: 1.7 }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "18", cy: "9", r: "2", stroke: "currentColor", strokeWidth: 1.7 }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M6 8v8", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M6 12c0-3 3-4.5 8.5-4.7", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round" })
+  ] });
+}
+function IconRemote({ className = "h-3.5 w-3.5" }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { viewBox: "0 0 24 24", fill: "none", className, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "path",
+    {
+      d: "M7 18a4 4 0 0 1-.6-7.96A5 5 0 0 1 16 8.05 4.5 4.5 0 0 1 15.5 17H7Z",
+      stroke: "currentColor",
+      strokeWidth: 1.7,
+      strokeLinejoin: "round"
+    }
+  ) });
+}
+function IconTag({ className = "h-3.5 w-3.5" }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { viewBox: "0 0 24 24", fill: "none", className, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        d: "m4 10 6.5-6.5H18a1 1 0 0 1 1 1v7.5L12.5 19a1 1 0 0 1-1.4 0L4 12.4a1 1 0 0 1 0-1.4Z",
+        stroke: "currentColor",
+        strokeWidth: 1.7,
+        strokeLinejoin: "round"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "14.5", cy: "8.5", r: "1.2", fill: "currentColor" })
+  ] });
+}
+function IconChevron({ className = "h-3 w-3", open }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "svg",
+    {
+      viewBox: "0 0 24 24",
+      fill: "none",
+      className: `${className} transition-transform duration-150 ${open ? "rotate-90" : ""}`,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M9 6l6 6-6 6", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" })
+    }
+  );
+}
 function TreeNodeRow({
   node,
   depth,
-  headBranch,
   onContextMenu
 }) {
   const [expanded, setExpanded] = reactExports.useState(true);
   const repoPath = useRepoStore((s) => s.repoPath);
   const hasChildren = node.children.size > 0;
+  const isHead = !!node.branch?.isHead;
   const handleClick = async () => {
     if (hasChildren) {
       setExpanded((e) => !e);
@@ -12948,70 +13013,61 @@ function TreeNodeRow({
     /* @__PURE__ */ jsxRuntimeExports.jsxs(
       "div",
       {
-        className: `flex cursor-pointer items-center gap-1 rounded px-1.5 py-1 text-[13px] hover:bg-ide-hover ${node.branch?.isHead ? "font-semibold text-ide-accent" : "text-ide-text"}`,
-        style: { paddingLeft: depth * 14 + 6 },
+        className: `group flex cursor-pointer items-center gap-1.5 rounded-md py-1 pr-2 text-[13px] transition-colors duration-100 ${isHead ? "bg-ide-accent/15 font-medium text-ide-accent" : "text-ide-text hover:bg-ide-hover"}`,
+        style: { paddingLeft: depth * 14 + 8 },
         onClick: handleClick,
         onContextMenu: (e) => {
           e.preventDefault();
           if (node.branch) onContextMenu(e, node.branch);
         },
         children: [
-          hasChildren && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "w-3 text-ide-textDim", children: expanded ? "▾" : "▸" }),
-          !hasChildren && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "w-3" }),
+          hasChildren ? /* @__PURE__ */ jsxRuntimeExports.jsx(IconChevron, { open: expanded, className: "h-3 w-3 shrink-0 text-ide-textDim" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "w-3 shrink-0" }),
+          !hasChildren && node.branch && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            IconBranch,
+            {
+              className: `h-3.5 w-3.5 shrink-0 ${isHead ? "text-ide-accent" : "text-ide-textDim"}`
+            }
+          ),
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate", children: node.name }),
-          node.branch?.ahead ? /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[11px] text-ide-green", children: [
+          isHead && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "h-1.5 w-1.5 shrink-0 rounded-full bg-ide-accent" }),
+          node.branch?.ahead ? /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "ml-auto shrink-0 text-[11px] font-medium text-ide-green", children: [
             "↑",
             node.branch.ahead
           ] }) : null,
-          node.branch?.behind ? /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[11px] text-ide-red", children: [
+          node.branch?.behind ? /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "shrink-0 text-[11px] font-medium text-ide-red", children: [
             "↓",
             node.branch.behind
           ] }) : null
         ]
       }
     ),
-    hasChildren && expanded && Array.from(node.children.values()).sort((a, b) => a.name.localeCompare(b.name)).map((child) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-      TreeNodeRow,
-      {
-        node: child,
-        depth: depth + 1,
-        headBranch,
-        onContextMenu
-      },
-      child.fullPath
-    ))
+    hasChildren && expanded && Array.from(node.children.values()).sort((a, b) => a.name.localeCompare(b.name)).map((child) => /* @__PURE__ */ jsxRuntimeExports.jsx(TreeNodeRow, { node: child, depth: depth + 1, onContextMenu }, child.fullPath))
   ] });
 }
 function Section({
   title,
+  icon: Icon,
   branches,
-  headBranch,
   onContextMenu
 }) {
   const [expanded, setExpanded] = reactExports.useState(true);
   const tree = reactExports.useMemo(() => buildTree(branches), [branches]);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-2", children: [
+  if (branches.length === 0) return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, {});
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-1 px-2", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs(
       "div",
       {
-        className: "flex cursor-pointer items-center gap-1 px-2 py-1 text-[11px] font-semibold uppercase text-ide-textDim hover:text-ide-text",
+        className: "flex cursor-pointer items-center gap-1.5 rounded-md px-1 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-ide-textDim hover:text-ide-text",
         onClick: () => setExpanded((e) => !e),
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "w-3", children: expanded ? "▾" : "▸" }),
-          title
+          /* @__PURE__ */ jsxRuntimeExports.jsx(IconChevron, { open: expanded, className: "h-3 w-3 shrink-0" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Icon, { className: "h-3.5 w-3.5 shrink-0" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "flex-1", children: title }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] font-medium text-ide-textDim/70", children: branches.length })
         ]
       }
     ),
-    expanded && Array.from(tree.children.values()).sort((a, b) => a.name.localeCompare(b.name)).map((child) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-      TreeNodeRow,
-      {
-        node: child,
-        depth: 1,
-        headBranch,
-        onContextMenu
-      },
-      child.fullPath
-    ))
+    expanded && Array.from(tree.children.values()).sort((a, b) => a.name.localeCompare(b.name)).map((child) => /* @__PURE__ */ jsxRuntimeExports.jsx(TreeNodeRow, { node: child, depth: 1, onContextMenu }, child.fullPath))
   ] });
 }
 function BranchTree() {
@@ -13025,9 +13081,9 @@ function BranchTree() {
     setMenu({ x: e.clientX, y: e.clientY, branch });
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "h-full overflow-auto py-2", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Section, { title: "Local Branches", branches: local, headBranch: head, onContextMenu: openMenu }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Section, { title: "Remotes", branches: remote, headBranch: head, onContextMenu: openMenu }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Section, { title: "Tags", branches: tags, headBranch: head, onContextMenu: openMenu }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Section, { title: "Local Branches", icon: IconBranch, branches: local, onContextMenu: openMenu }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Section, { title: "Remotes", icon: IconRemote, branches: remote, onContextMenu: openMenu }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Section, { title: "Tags", icon: IconTag, branches: tags, onContextMenu: openMenu }),
     menu && /* @__PURE__ */ jsxRuntimeExports.jsx(
       BranchContextMenu,
       {
@@ -13040,18 +13096,37 @@ function BranchTree() {
     )
   ] });
 }
+const ITEMS = [
+  { key: "changes", label: "Changes", icon: IconChanges },
+  { key: "log", label: "Log", icon: IconLog }
+];
 function SideNav() {
   const activeTab = useUiStore((s) => s.activeTab);
   const setActiveTab = useUiStore((s) => s.setActiveTab);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border-b border-ide-border py-1", children: ["changes", "log"].map((tab) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "button",
-    {
-      className: `block w-full px-3 py-1.5 text-left text-[13px] capitalize ${activeTab === tab ? "bg-ide-selected font-medium text-ide-text" : "text-ide-textDim hover:bg-ide-hover hover:text-ide-text"}`,
-      onClick: () => setActiveTab(tab),
-      children: tab
-    },
-    tab
-  )) });
+  const status = useStatusStore((s) => s.status);
+  const changesCount = (status?.staged.length ?? 0) + (status?.unstaged.length ?? 0) + (status?.untracked.length ?? 0);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-col gap-0.5 border-b border-ide-border p-2", children: ITEMS.map(({ key, label, icon: Icon }) => {
+    const active = activeTab === key;
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "button",
+      {
+        className: `group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors duration-100 ${active ? "bg-ide-accent/15 text-ide-accent" : "text-ide-textDim hover:bg-ide-hover hover:text-ide-text"}`,
+        onClick: () => setActiveTab(key),
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Icon, { className: `h-4 w-4 shrink-0 ${active ? "text-ide-accent" : "text-ide-textDim group-hover:text-ide-text"}` }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "flex-1 text-left", children: label }),
+          key === "changes" && changesCount > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "span",
+            {
+              className: `rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none ${active ? "bg-ide-accent text-white" : "bg-ide-hover text-ide-textDim"}`,
+              children: changesCount
+            }
+          )
+        ]
+      },
+      key
+    );
+  }) });
 }
 function BranchSwitcherPopup() {
   const open = useUiStore((s) => s.branchSwitcherOpen);
@@ -14840,15 +14915,27 @@ function Group({
   selectedPath,
   onSelect,
   onAction,
-  actionLabel
+  actionLabel,
+  onBulkAction,
+  bulkActionLabel
 }) {
   if (files.length === 0) return null;
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-2", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "px-2 py-1 text-[11px] font-semibold uppercase text-ide-textDim", children: [
-      title,
-      " (",
-      files.length,
-      ")"
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "group/header flex items-center px-2 py-1 text-[11px] font-semibold uppercase text-ide-textDim", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+        title,
+        " (",
+        files.length,
+        ")"
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          className: "ml-auto hidden rounded border border-ide-border px-1.5 py-0.5 text-[10px] normal-case tracking-normal text-ide-textDim hover:bg-ide-hover hover:text-ide-text group-hover/header:block",
+          onClick: onBulkAction,
+          children: bulkActionLabel
+        }
+      )
     ] }),
     files.map((f) => /* @__PURE__ */ jsxRuntimeExports.jsx(
       FileRow,
@@ -14884,8 +14971,40 @@ function ChangesPanel() {
     await window.gitApi.unstageFile(repoPath, path);
     await invalidate(repoPath, ["status"]);
   };
+  const stagePaths = async (paths) => {
+    if (!repoPath || paths.length === 0) return;
+    await window.gitApi.stagePaths(repoPath, paths);
+    await invalidate(repoPath, ["status"]);
+  };
+  const unstagePaths = async (paths) => {
+    if (!repoPath || paths.length === 0) return;
+    await window.gitApi.unstagePaths(repoPath, paths);
+    await invalidate(repoPath, ["status"]);
+  };
+  const unstagedAndUntracked = [...status.unstaged, ...status.untracked].map((f) => f.path);
+  const stagedPaths = status.staged.map((f) => f.path);
   const total = status.staged.length + status.unstaged.length + status.untracked.length;
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex h-full flex-col", children: [
+    total > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 border-b border-ide-border px-2 py-1.5", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button,
+        {
+          variant: "default",
+          disabled: unstagedAndUntracked.length === 0,
+          onClick: () => stagePaths(unstagedAndUntracked),
+          children: "Stage All"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button,
+        {
+          variant: "default",
+          disabled: stagedPaths.length === 0,
+          onClick: () => unstagePaths(stagedPaths),
+          children: "Unstage All"
+        }
+      )
+    ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 overflow-auto py-2", children: [
       total === 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "p-4 text-ide-textDim", children: "No changes" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -14897,7 +15016,9 @@ function ChangesPanel() {
           selectedPath: target?.type === "workingFile" && target.staged ? selectedPath : null,
           onSelect: handleSelect,
           onAction: unstage,
-          actionLabel: "Unstage"
+          actionLabel: "Unstage",
+          onBulkAction: () => unstagePaths(stagedPaths),
+          bulkActionLabel: "Unstage All"
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -14909,7 +15030,9 @@ function ChangesPanel() {
           selectedPath: target?.type === "workingFile" && !target.staged ? selectedPath : null,
           onSelect: handleSelect,
           onAction: stage,
-          actionLabel: "Stage"
+          actionLabel: "Stage",
+          onBulkAction: () => stagePaths(status.unstaged.map((f) => f.path)),
+          bulkActionLabel: "Stage All"
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -14921,7 +15044,9 @@ function ChangesPanel() {
           selectedPath: target?.type === "workingFile" && !target.staged ? selectedPath : null,
           onSelect: handleSelect,
           onAction: stage,
-          actionLabel: "Stage"
+          actionLabel: "Stage",
+          onBulkAction: () => stagePaths(status.untracked.map((f) => f.path)),
+          bulkActionLabel: "Stage All"
         }
       )
     ] }),
@@ -14975,6 +15100,21 @@ function DiffViewer() {
     ] })
   ] });
 }
+const POLL_INTERVAL_MS = 5e3;
+function useAutoRefresh(repoPath) {
+  reactExports.useEffect(() => {
+    if (!repoPath) return;
+    const refresh = () => {
+      if (document.hasFocus()) invalidate(repoPath, ["log", "branches", "status"]);
+    };
+    window.addEventListener("focus", refresh);
+    const interval = setInterval(refresh, POLL_INTERVAL_MS);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      clearInterval(interval);
+    };
+  }, [repoPath]);
+}
 function RepoWorkspace() {
   const repoPath = useRepoStore((s) => s.repoPath);
   const loadLog = useLogStore((s) => s.load);
@@ -14987,6 +15127,7 @@ function RepoWorkspace() {
     loadBranches(repoPath);
     loadStatus(repoPath);
   }, [repoPath]);
+  useAutoRefresh(repoPath);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex h-screen flex-col", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(TopBar, {}),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex min-h-0 flex-1", children: [
@@ -15005,6 +15146,10 @@ function RepoWorkspace() {
 }
 function App() {
   const repoPath = useRepoStore((s) => s.repoPath);
+  const repoName = useRepoStore((s) => s.repoName);
+  reactExports.useEffect(() => {
+    document.title = repoName ? `${repoName} — GitDesk` : "GitDesk";
+  }, [repoName]);
   return repoPath ? /* @__PURE__ */ jsxRuntimeExports.jsx(RepoWorkspace, {}) : /* @__PURE__ */ jsxRuntimeExports.jsx(WelcomeScreen, {});
 }
 ReactDOM.createRoot(document.getElementById("root")).render(

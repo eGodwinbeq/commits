@@ -14,6 +14,8 @@ export const IpcChannels = {
 
   gitStageFile: 'git:stageFile',
   gitUnstageFile: 'git:unstageFile',
+  gitStagePaths: 'git:stagePaths',
+  gitUnstagePaths: 'git:unstagePaths',
   gitDiscardChanges: 'git:discardChanges',
   gitCommit: 'git:commit',
 

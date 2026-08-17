@@ -9,6 +9,12 @@ export function registerGitWriteHandlers(): void {
   ipcMain.handle(IpcChannels.gitUnstageFile, (_evt, repoPath: string, path: string) =>
     gitOps.unstageFile(repoPath, path)
   )
+  ipcMain.handle(IpcChannels.gitStagePaths, (_evt, repoPath: string, paths: string[]) =>
+    gitOps.stagePaths(repoPath, paths)
+  )
+  ipcMain.handle(IpcChannels.gitUnstagePaths, (_evt, repoPath: string, paths: string[]) =>
+    gitOps.unstagePaths(repoPath, paths)
+  )
   ipcMain.handle(IpcChannels.gitDiscardChanges, (_evt, repoPath: string, path: string) =>
     gitOps.discardChanges(repoPath, path)
   )

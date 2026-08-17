@@ -139,6 +139,8 @@ const IpcChannels = {
   gitShow: "git:show",
   gitStageFile: "git:stageFile",
   gitUnstageFile: "git:unstageFile",
+  gitStagePaths: "git:stagePaths",
+  gitUnstagePaths: "git:unstagePaths",
   gitDiscardChanges: "git:discardChanges",
   gitCommit: "git:commit",
   gitCheckout: "git:checkout",
@@ -526,6 +528,8 @@ async function run(repoPath, args) {
 }
 const stageFile = (repoPath, path) => run(repoPath, ["add", "--", path]);
 const unstageFile = (repoPath, path) => run(repoPath, ["restore", "--staged", "--", path]);
+const stagePaths = (repoPath, paths) => run(repoPath, ["add", "--", ...paths]);
+const unstagePaths = (repoPath, paths) => run(repoPath, ["restore", "--staged", "--", ...paths]);
 const discardChanges = (repoPath, path) => run(repoPath, ["checkout", "--", path]);
 const commit = (repoPath, message, opts = {}) => {
   const args = ["commit", "-m", message];
@@ -564,6 +568,14 @@ function registerGitWriteHandlers() {
   ipcMain.handle(
     IpcChannels.gitUnstageFile,
     (_evt, repoPath, path) => unstageFile(repoPath, path)
+  );
+  ipcMain.handle(
+    IpcChannels.gitStagePaths,
+    (_evt, repoPath, paths) => stagePaths(repoPath, paths)
+  );
+  ipcMain.handle(
+    IpcChannels.gitUnstagePaths,
+    (_evt, repoPath, paths) => unstagePaths(repoPath, paths)
   );
   ipcMain.handle(
     IpcChannels.gitDiscardChanges,

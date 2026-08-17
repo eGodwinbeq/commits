@@ -13,6 +13,7 @@ import { BranchSwitcherPopup } from './components/branches/BranchSwitcherPopup'
 import { CommitLogTable } from './components/log/CommitLogTable'
 import { ChangesPanel } from './components/changes/ChangesPanel'
 import { DiffViewer } from './components/diff/DiffViewer'
+import { useAutoRefresh } from './lib/useAutoRefresh'
 
 function RepoWorkspace(): React.JSX.Element {
   const repoPath = useRepoStore((s) => s.repoPath)
@@ -27,6 +28,8 @@ function RepoWorkspace(): React.JSX.Element {
     loadBranches(repoPath)
     loadStatus(repoPath)
   }, [repoPath])
+
+  useAutoRefresh(repoPath)
 
   return (
     <div className="flex h-screen flex-col">
@@ -57,5 +60,11 @@ function RepoWorkspace(): React.JSX.Element {
 
 export default function App(): React.JSX.Element {
   const repoPath = useRepoStore((s) => s.repoPath)
+  const repoName = useRepoStore((s) => s.repoName)
+
+  useEffect(() => {
+    document.title = repoName ? `${repoName} — GitDesk` : 'GitDesk'
+  }, [repoName])
+
   return repoPath ? <RepoWorkspace /> : <WelcomeScreen />
 }

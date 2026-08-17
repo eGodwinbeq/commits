@@ -34,6 +34,10 @@ export const gitApi = {
     ipcRenderer.invoke(IpcChannels.gitStageFile, repoPath, path),
   unstageFile: (repoPath: string, path: string): Promise<GitResult<string>> =>
     ipcRenderer.invoke(IpcChannels.gitUnstageFile, repoPath, path),
+  stagePaths: (repoPath: string, paths: string[]): Promise<GitResult<string>> =>
+    ipcRenderer.invoke(IpcChannels.gitStagePaths, repoPath, paths),
+  unstagePaths: (repoPath: string, paths: string[]): Promise<GitResult<string>> =>
+    ipcRenderer.invoke(IpcChannels.gitUnstagePaths, repoPath, paths),
   discardChanges: (repoPath: string, path: string): Promise<GitResult<string>> =>
     ipcRenderer.invoke(IpcChannels.gitDiscardChanges, repoPath, path),
   commit: (repoPath: string, message: string, opts?: { amend?: boolean }): Promise<GitResult<string>> =>

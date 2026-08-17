@@ -51,8 +51,8 @@ export function TopBar(): React.JSX.Element {
         {head ?? 'detached HEAD'}
       </button>
       <div className="ml-auto flex gap-1.5">
-        <Button variant="ghost" onClick={refresh}>
-          ⟳ Refresh
+        <Button variant="primary" onClick={push}>
+          Push
         </Button>
         <Button variant="default" onClick={fetch}>
           Fetch
@@ -60,8 +60,8 @@ export function TopBar(): React.JSX.Element {
         <Button variant="default" onClick={pull}>
           Pull
         </Button>
-        <Button variant="default" onClick={push}>
-          Push
+        <Button variant="ghost" onClick={refresh}>
+          ⟳ Refresh
         </Button>
         <Button variant="ghost" onClick={closeRepo}>
           Close
