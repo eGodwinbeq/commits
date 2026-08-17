@@ -108,7 +108,7 @@ function createMainWindow() {
     autoHideMenuBar: true,
     backgroundColor: "#1e1f22",
     webPreferences: {
-      preload: join(__dirname, "../preload/index.mjs"),
+      preload: join(__dirname, "../preload/index.js"),
       sandbox: true,
       contextIsolation: true,
       nodeIntegration: false
@@ -209,8 +209,9 @@ async function validateRepo(path) {
   return { ok: true, data: { path: root, name: basename(root) } };
 }
 function registerRepoHandlers() {
-  ipcMain.handle(IpcChannels.repoOpenFolderDialog, async () => {
-    const res = await dialog.showOpenDialog({ properties: ["openDirectory"] });
+  ipcMain.handle(IpcChannels.repoOpenFolderDialog, async (evt) => {
+    const win = BrowserWindow.fromWebContents(evt.sender);
+    const res = win ? await dialog.showOpenDialog(win, { properties: ["openDirectory"] }) : await dialog.showOpenDialog({ properties: ["openDirectory"] });
     if (res.canceled || res.filePaths.length === 0) return null;
     return res.filePaths[0];
   });
