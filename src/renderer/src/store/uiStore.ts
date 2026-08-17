@@ -10,7 +10,7 @@ interface UiState {
 }
 
 export const useUiStore = create<UiState>((set) => ({
-  activeTab: 'log',
+  activeTab: 'changes',
   setActiveTab: (tab) => set({ activeTab: tab }),
   branchSwitcherOpen: false,
   setBranchSwitcherOpen: (open) => set({ branchSwitcherOpen: open })

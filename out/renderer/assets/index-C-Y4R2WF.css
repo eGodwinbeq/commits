@@ -696,18 +696,11 @@ video {
 .border-b {
   border-bottom-width: 1px;
 }
-.border-b-2 {
-  border-bottom-width: 2px;
-}
 .border-r {
   border-right-width: 1px;
 }
 .border-t {
   border-top-width: 1px;
-}
-.border-ide-accent {
-  --tw-border-opacity: 1;
-  border-color: rgb(53 116 240 / var(--tw-border-opacity, 1));
 }
 .border-ide-border {
   --tw-border-opacity: 1;
@@ -783,10 +776,6 @@ video {
 .px-3 {
   padding-left: 0.75rem;
   padding-right: 0.75rem;
-}
-.px-4 {
-  padding-left: 1rem;
-  padding-right: 1rem;
 }
 .py-0\.5 {
   padding-top: 0.125rem;

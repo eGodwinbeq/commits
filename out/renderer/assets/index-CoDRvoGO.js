@@ -12683,7 +12683,7 @@ const useStatusStore = create((set) => ({
   }
 }));
 const useUiStore = create((set) => ({
-  activeTab: "log",
+  activeTab: "changes",
   setActiveTab: (tab) => set({ activeTab: tab }),
   branchSwitcherOpen: false,
   setBranchSwitcherOpen: (open) => set({ branchSwitcherOpen: open })
@@ -13039,6 +13039,19 @@ function BranchTree() {
       }
     )
   ] });
+}
+function SideNav() {
+  const activeTab = useUiStore((s) => s.activeTab);
+  const setActiveTab = useUiStore((s) => s.setActiveTab);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border-b border-ide-border py-1", children: ["changes", "log"].map((tab) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "button",
+    {
+      className: `block w-full px-3 py-1.5 text-left text-[13px] capitalize ${activeTab === tab ? "bg-ide-selected font-medium text-ide-text" : "text-ide-textDim hover:bg-ide-hover hover:text-ide-text"}`,
+      onClick: () => setActiveTab(tab),
+      children: tab
+    },
+    tab
+  )) });
 }
 function BranchSwitcherPopup() {
   const open = useUiStore((s) => s.branchSwitcherOpen);
@@ -14968,7 +14981,6 @@ function RepoWorkspace() {
   const loadBranches = useBranchStore((s) => s.load);
   const loadStatus = useStatusStore((s) => s.load);
   const activeTab = useUiStore((s) => s.activeTab);
-  const setActiveTab = useUiStore((s) => s.setActiveTab);
   reactExports.useEffect(() => {
     if (!repoPath) return;
     loadLog(repoPath);
@@ -14978,22 +14990,14 @@ function RepoWorkspace() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex h-screen flex-col", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(TopBar, {}),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex min-h-0 flex-1", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-64 shrink-0 border-r border-ide-border bg-ide-panelAlt", children: /* @__PURE__ */ jsxRuntimeExports.jsx(BranchTree, {}) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex min-w-0 flex-1 flex-col", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex border-b border-ide-border", children: ["log", "changes"].map((tab) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            className: `px-4 py-1.5 text-[12px] font-medium capitalize ${activeTab === tab ? "border-b-2 border-ide-accent text-ide-text" : "text-ide-textDim hover:text-ide-text"}`,
-            onClick: () => setActiveTab(tab),
-            children: tab
-          },
-          tab
-        )) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex min-h-0 flex-1", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-w-0 flex-1 border-r border-ide-border", children: activeTab === "log" ? /* @__PURE__ */ jsxRuntimeExports.jsx(CommitLogTable, {}) : /* @__PURE__ */ jsxRuntimeExports.jsx(ChangesPanel, {}) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-[45%] min-w-[320px]", children: /* @__PURE__ */ jsxRuntimeExports.jsx(DiffViewer, {}) })
-        ] })
-      ] })
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex w-64 shrink-0 flex-col border-r border-ide-border bg-ide-panelAlt", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(SideNav, {}),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-h-0 flex-1 overflow-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsx(BranchTree, {}) })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex min-w-0 flex-1 flex-col", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex min-h-0 flex-1", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-w-0 flex-1 border-r border-ide-border", children: activeTab === "log" ? /* @__PURE__ */ jsxRuntimeExports.jsx(CommitLogTable, {}) : /* @__PURE__ */ jsxRuntimeExports.jsx(ChangesPanel, {}) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-[45%] min-w-[320px]", children: /* @__PURE__ */ jsxRuntimeExports.jsx(DiffViewer, {}) })
+      ] }) })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(StatusBar, {}),
     /* @__PURE__ */ jsxRuntimeExports.jsx(BranchSwitcherPopup, {})
