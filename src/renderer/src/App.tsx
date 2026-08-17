@@ -38,11 +38,11 @@ function RepoWorkspace(): React.JSX.Element {
   useAutoRefresh(repoPath)
 
   return (
-    <div className="flex h-screen flex-col gap-2 bg-ide-bg p-2">
+    <div className="flex h-full flex-col gap-4 bg-ide-bg p-3">
       <div className="shrink-0 overflow-hidden rounded-lg border border-ide-border">
         <TopBar />
       </div>
-      <div className="flex min-h-0 flex-1 items-stretch">
+      <div className="flex min-h-0 flex-1 items-stretch gap-2">
         <div
           className="flex shrink-0 flex-col overflow-hidden rounded-lg border border-ide-border bg-ide-panelAlt"
           style={{ width: sidebarWidth }}
@@ -76,6 +76,11 @@ function RepoWorkspace(): React.JSX.Element {
   )
 }
 
+// Electron's `titleBarStyle: 'hidden'` removes the native drag behavior from the window,
+// so the page must expose its own drag region matching the titleBarOverlay height (see
+// src/main/window.ts) or the window becomes undraggable.
+const dragRegionStyle = { WebkitAppRegion: 'drag' } as React.CSSProperties
+
 export default function App(): React.JSX.Element {
   const repoPath = useRepoStore((s) => s.repoPath)
   const repoName = useRepoStore((s) => s.repoName)
@@ -84,5 +89,10 @@ export default function App(): React.JSX.Element {
     document.title = repoName ? `${repoName} — Commits` : 'Commits'
   }, [repoName])
 
-  return repoPath ? <RepoWorkspace /> : <WelcomeScreen />
+  return (
+    <div className="flex h-screen flex-col">
+      <div className="h-10 shrink-0" style={dragRegionStyle} />
+      <div className="min-h-0 flex-1">{repoPath ? <RepoWorkspace /> : <WelcomeScreen />}</div>
+    </div>
+  )
 }

@@ -37,10 +37,7 @@ export function ResizeHandle({ onResize }: Props): React.JSX.Element {
   }
 
   return (
-    <div
-      className="group relative z-10 -mx-1 w-2 shrink-0 cursor-col-resize"
-      onMouseDown={onMouseDown}
-    >
+    <div className="group relative z-10 w-2 shrink-0 cursor-col-resize" onMouseDown={onMouseDown}>
       <div className="mx-auto h-full w-px bg-ide-border transition-colors group-hover:bg-ide-accent group-active:bg-ide-accent" />
     </div>
   )

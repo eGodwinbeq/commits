@@ -42,7 +42,7 @@ export function TopBar(): React.JSX.Element {
   }
 
   return (
-    <div className="flex h-14 shrink-0 items-center gap-2 bg-ide-panel px-3">
+    <div className="flex h-11 shrink-0 items-center gap-2 bg-ide-panel px-3">
       <span className="text-[13px] font-semibold text-ide-text">{repoName}</span>
       <button
         className="ml-2 rounded border border-ide-border bg-ide-hover px-2 py-1 text-[12px] hover:bg-ide-selected"

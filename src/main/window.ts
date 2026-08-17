@@ -11,6 +11,15 @@ export function createMainWindow(): BrowserWindow {
     show: false,
     autoHideMenuBar: true,
     backgroundColor: '#1e1f22',
+    // Windows/Linux draw the native title bar at a fixed ~32px height. Using 'hidden' +
+    // titleBarOverlay keeps the native min/max/close buttons but lets us pick the height
+    // of the strip they sit in, so it can be taller than the OS default.
+    titleBarStyle: 'hidden',
+    titleBarOverlay: {
+      color: '#1e1f22',
+      symbolColor: '#dfe1e5',
+      height: 40
+    },
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: true,
