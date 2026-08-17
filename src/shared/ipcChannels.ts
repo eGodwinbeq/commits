@@ -1,5 +1,6 @@
 export const IpcChannels = {
   appPing: 'app:ping',
+  appSetTitleBarTheme: 'app:setTitleBarTheme',
 
   repoOpenFolderDialog: 'repo:openFolderDialog',
   repoValidate: 'repo:validate',

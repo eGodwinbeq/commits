@@ -7,14 +7,15 @@ const GAP = 3
 const LABEL_COL_WIDTH = 24
 const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', '']
 
+// References the theme-aware --ide-heat-* CSS variables (see index.css) rather than fixed
+// hex values, so the heatmap follows the active light/dark theme automatically.
 function intensityColor(count: number, max: number): string {
-  if (count === 0) return '#2b2d30'
-  if (max === 0) return '#2b2d30'
+  if (count === 0 || max === 0) return 'rgb(var(--ide-heat-0))'
   const ratio = count / max
-  if (ratio > 0.75) return '#499c54'
-  if (ratio > 0.5) return '#3d8546'
-  if (ratio > 0.25) return '#316d38'
-  return '#26542b'
+  if (ratio > 0.75) return 'rgb(var(--ide-heat-4))'
+  if (ratio > 0.5) return 'rgb(var(--ide-heat-3))'
+  if (ratio > 0.25) return 'rgb(var(--ide-heat-2))'
+  return 'rgb(var(--ide-heat-1))'
 }
 
 export function ContributionHeatmap({ commits }: { commits: Commit[] }): React.JSX.Element {

@@ -6,11 +6,14 @@ import type {
   DiffFile,
   GitResult,
   RepoInfo,
-  RepoStatus
+  RepoStatus,
+  Theme
 } from '@shared/types'
 
 export const gitApi = {
   ping: (): Promise<string> => ipcRenderer.invoke(IpcChannels.appPing),
+  setTitleBarTheme: (theme: Theme): Promise<void> =>
+    ipcRenderer.invoke(IpcChannels.appSetTitleBarTheme, theme),
 
   openFolderDialog: (): Promise<string | null> =>
     ipcRenderer.invoke(IpcChannels.repoOpenFolderDialog),

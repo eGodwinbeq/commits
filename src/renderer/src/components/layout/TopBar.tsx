@@ -1,8 +1,13 @@
+import { useState } from 'react'
 import { useRepoStore } from '../../store/repoStore'
 import { useBranchStore, currentBranchName } from '../../store/branchStore'
 import { useUiStore } from '../../store/uiStore'
+import { useTaskStore } from '../../store/taskStore'
 import { Button } from '../common/Button'
+import { ThemeToggle } from '../common/ThemeToggle'
 import { invalidate } from '../../lib/invalidate'
+
+type BusyAction = 'push' | 'fetch' | 'pull' | 'refresh' | null
 
 export function TopBar(): React.JSX.Element {
   const repoName = useRepoStore((s) => s.repoName)
@@ -10,36 +15,53 @@ export function TopBar(): React.JSX.Element {
   const closeRepo = useRepoStore((s) => s.closeRepo)
   const branches = useBranchStore((s) => s.branches)
   const setBranchSwitcherOpen = useUiStore((s) => s.setBranchSwitcherOpen)
+  const setActiveTask = useTaskStore((s) => s.setActiveTask)
   const head = currentBranchName(branches)
+  const [busy, setBusy] = useState<BusyAction>(null)
 
-  const refresh = async (): Promise<void> => {
-    if (repoPath) await invalidate(repoPath, ['log', 'branches', 'status'])
+  const run = async (action: BusyAction, label: string, fn: () => Promise<void>): Promise<void> => {
+    setBusy(action)
+    setActiveTask(label)
+    try {
+      await fn()
+    } finally {
+      setBusy(null)
+      setActiveTask(null)
+    }
   }
 
-  const fetch = async (): Promise<void> => {
-    if (!repoPath) return
-    const result = await window.gitApi.fetch(repoPath)
-    if (!result.ok) window.alert(result.error.message)
-    await refresh()
-  }
-
-  const pull = async (): Promise<void> => {
-    if (!repoPath || !head) return
-    const result = await window.gitApi.pull(repoPath, { remote: 'origin', branch: head })
-    if (!result.ok) window.alert(result.error.message)
-    await refresh()
-  }
-
-  const push = async (): Promise<void> => {
-    if (!repoPath || !head) return
-    const result = await window.gitApi.push(repoPath, {
-      remote: 'origin',
-      branch: head,
-      setUpstream: true
+  const refresh = (): Promise<void> =>
+    run('refresh', 'Refreshing…', async () => {
+      if (repoPath) await invalidate(repoPath, ['log', 'branches', 'status'])
     })
-    if (!result.ok) window.alert(result.error.message)
-    await refresh()
-  }
+
+  const fetch = (): Promise<void> =>
+    run('fetch', 'Fetching…', async () => {
+      if (!repoPath) return
+      const result = await window.gitApi.fetch(repoPath)
+      if (!result.ok) window.alert(result.error.message)
+      if (repoPath) await invalidate(repoPath, ['log', 'branches', 'status'])
+    })
+
+  const pull = (): Promise<void> =>
+    run('pull', 'Pulling…', async () => {
+      if (!repoPath || !head) return
+      const result = await window.gitApi.pull(repoPath, { remote: 'origin', branch: head })
+      if (!result.ok) window.alert(result.error.message)
+      await invalidate(repoPath, ['log', 'branches', 'status'])
+    })
+
+  const push = (): Promise<void> =>
+    run('push', 'Pushing…', async () => {
+      if (!repoPath || !head) return
+      const result = await window.gitApi.push(repoPath, {
+        remote: 'origin',
+        branch: head,
+        setUpstream: true
+      })
+      if (!result.ok) window.alert(result.error.message)
+      await invalidate(repoPath, ['log', 'branches', 'status'])
+    })
 
   return (
     <div className="flex h-11 shrink-0 items-center gap-2 bg-ide-panel px-3">
@@ -51,21 +73,22 @@ export function TopBar(): React.JSX.Element {
         {head ?? 'detached HEAD'}
       </button>
       <div className="ml-auto flex gap-1.5">
-        <Button variant="primary" onClick={push}>
+        <Button variant="primary" loading={busy === 'push'} disabled={busy !== null} onClick={push}>
           Push
         </Button>
-        <Button variant="default" onClick={fetch}>
+        <Button variant="default" loading={busy === 'fetch'} disabled={busy !== null} onClick={fetch}>
           Fetch
         </Button>
-        <Button variant="default" onClick={pull}>
+        <Button variant="default" loading={busy === 'pull'} disabled={busy !== null} onClick={pull}>
           Pull
         </Button>
-        <Button variant="ghost" onClick={refresh}>
-          ⟳ Refresh
+        <Button variant="ghost" loading={busy === 'refresh'} disabled={busy !== null} onClick={refresh}>
+          {busy !== 'refresh' && '⟳ '}Refresh
         </Button>
         <Button variant="ghost" onClick={closeRepo}>
           Close
         </Button>
+        <ThemeToggle />
       </div>
     </div>
   )

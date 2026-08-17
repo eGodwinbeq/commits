@@ -10,37 +10,50 @@ import type { Branch } from '@shared/types'
 function TreeNodeRow({
   node,
   depth,
+  selectedRef,
+  onSelect,
   onContextMenu
 }: {
   node: TreeNode
   depth: number
+  selectedRef: string | null
+  onSelect: (refName: string) => void
   onContextMenu: (e: React.MouseEvent, branch: Branch) => void
 }): React.JSX.Element {
   const [expanded, setExpanded] = useState(false)
   const repoPath = useRepoStore((s) => s.repoPath)
   const hasChildren = node.children.size > 0
   const isHead = !!node.branch?.isHead
+  const isSelected = !!node.branch && node.branch.refName === selectedRef
 
-  const handleClick = async (): Promise<void> => {
+  const checkout = async (): Promise<void> => {
+    if (!node.branch || !repoPath || node.branch.isHead) return
+    const result = await window.gitApi.checkout(repoPath, node.branch.name)
+    if (!result.ok) window.alert(result.error.message)
+    await invalidate(repoPath, ['log', 'branches', 'status'])
+  }
+
+  const handleClick = (): void => {
     if (hasChildren) {
       setExpanded((e) => !e)
       return
     }
-    if (node.branch && repoPath && !node.branch.isHead) {
-      const result = await window.gitApi.checkout(repoPath, node.branch.name)
-      if (!result.ok) window.alert(result.error.message)
-      await invalidate(repoPath, ['log', 'branches', 'status'])
-    }
+    if (node.branch) onSelect(node.branch.refName)
   }
 
   return (
     <div>
       <div
         className={`group flex cursor-pointer items-center gap-1.5 rounded-md py-1 pr-2 text-[13px] transition-colors duration-100 ${
-          isHead ? 'bg-ide-accent/15 font-medium text-ide-accent' : 'text-ide-text hover:bg-ide-hover'
+          isHead
+            ? 'bg-ide-accent/15 font-medium text-ide-accent'
+            : isSelected
+              ? 'bg-ide-selected text-ide-text'
+              : 'text-ide-text hover:bg-ide-hover'
         }`}
         style={{ paddingLeft: depth * 14 + 8 }}
         onClick={handleClick}
+        onDoubleClick={() => !hasChildren && checkout()}
         onContextMenu={(e) => {
           e.preventDefault()
           if (node.branch) onContextMenu(e, node.branch)
@@ -72,7 +85,14 @@ function TreeNodeRow({
         Array.from(node.children.values())
           .sort((a, b) => a.name.localeCompare(b.name))
           .map((child) => (
-            <TreeNodeRow key={child.fullPath} node={child} depth={depth + 1} onContextMenu={onContextMenu} />
+            <TreeNodeRow
+              key={child.fullPath}
+              node={child}
+              depth={depth + 1}
+              selectedRef={selectedRef}
+              onSelect={onSelect}
+              onContextMenu={onContextMenu}
+            />
           ))}
     </div>
   )
@@ -82,11 +102,15 @@ function Section({
   title,
   icon: Icon,
   branches,
+  selectedRef,
+  onSelect,
   onContextMenu
 }: {
   title: string
   icon: typeof IconBranch
   branches: Branch[]
+  selectedRef: string | null
+  onSelect: (refName: string) => void
   onContextMenu: (e: React.MouseEvent, branch: Branch) => void
 }): React.JSX.Element {
   const [expanded, setExpanded] = useState(false)
@@ -108,7 +132,16 @@ function Section({
       {expanded &&
         Array.from(tree.children.values())
           .sort((a, b) => a.name.localeCompare(b.name))
-          .map((child) => <TreeNodeRow key={child.fullPath} node={child} depth={1} onContextMenu={onContextMenu} />)}
+          .map((child) => (
+            <TreeNodeRow
+              key={child.fullPath}
+              node={child}
+              depth={1}
+              selectedRef={selectedRef}
+              onSelect={onSelect}
+              onContextMenu={onContextMenu}
+            />
+          ))}
     </div>
   )
 }
@@ -116,6 +149,7 @@ function Section({
 export function BranchTree(): React.JSX.Element {
   const branches = useBranchStore((s) => s.branches)
   const [menu, setMenu] = useState<{ x: number; y: number; branch: Branch } | null>(null)
+  const [selectedRef, setSelectedRef] = useState<string | null>(null)
 
   const local = branches.filter((b) => b.kind === 'local')
   const remote = branches.filter((b) => b.kind === 'remote')
@@ -128,9 +162,30 @@ export function BranchTree(): React.JSX.Element {
 
   return (
     <div className="h-full overflow-auto py-2">
-      <Section title="Local Branches" icon={IconBranch} branches={local} onContextMenu={openMenu} />
-      <Section title="Remotes" icon={IconRemote} branches={remote} onContextMenu={openMenu} />
-      <Section title="Tags" icon={IconTag} branches={tags} onContextMenu={openMenu} />
+      <Section
+        title="Local Branches"
+        icon={IconBranch}
+        branches={local}
+        selectedRef={selectedRef}
+        onSelect={setSelectedRef}
+        onContextMenu={openMenu}
+      />
+      <Section
+        title="Remotes"
+        icon={IconRemote}
+        branches={remote}
+        selectedRef={selectedRef}
+        onSelect={setSelectedRef}
+        onContextMenu={openMenu}
+      />
+      <Section
+        title="Tags"
+        icon={IconTag}
+        branches={tags}
+        selectedRef={selectedRef}
+        onSelect={setSelectedRef}
+        onContextMenu={openMenu}
+      />
       {menu && (
         <BranchContextMenu
           x={menu.x}

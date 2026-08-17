@@ -1,3 +1,5 @@
+export type Theme = 'dark' | 'light'
+
 export interface GitResultOk<T> {
   ok: true
   data: T

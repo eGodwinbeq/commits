@@ -80,6 +80,7 @@ const electronAPI = {
 };
 const IpcChannels = {
   appPing: "app:ping",
+  appSetTitleBarTheme: "app:setTitleBarTheme",
   repoOpenFolderDialog: "repo:openFolderDialog",
   repoValidate: "repo:validate",
   gitLog: "git:log",
@@ -105,6 +106,7 @@ const IpcChannels = {
 };
 const gitApi = {
   ping: () => electron.ipcRenderer.invoke(IpcChannels.appPing),
+  setTitleBarTheme: (theme) => electron.ipcRenderer.invoke(IpcChannels.appSetTitleBarTheme, theme),
   openFolderDialog: () => electron.ipcRenderer.invoke(IpcChannels.repoOpenFolderDialog),
   validateRepo: (path) => electron.ipcRenderer.invoke(IpcChannels.repoValidate, path),
   getLog: (repoPath, opts) => electron.ipcRenderer.invoke(IpcChannels.gitLog, repoPath, opts),

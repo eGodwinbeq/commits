@@ -1,11 +1,15 @@
 import { useRepoStore } from '../../store/repoStore'
 import { Button } from '../common/Button'
+import { ThemeToggle } from '../common/ThemeToggle'
 
 export function WelcomeScreen(): React.JSX.Element {
   const { openFolderDialog, openRepo, recentRepos, error, isLoading } = useRepoStore()
 
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-4">
+    <div className="relative flex h-full flex-col items-center justify-center gap-4">
+      <div className="absolute right-3 top-3">
+        <ThemeToggle />
+      </div>
       <h1 className="text-xl font-semibold text-ide-text">Commits</h1>
       <Button variant="primary" disabled={isLoading} onClick={openFolderDialog}>
         Open Repository…

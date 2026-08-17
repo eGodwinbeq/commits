@@ -79,7 +79,14 @@ export function CommitGraphColumn({ row, prevRow }: Props): React.JSX.Element {
         />
       ))}
 
-      <circle cx={cx(row.lane)} cy={midY} r={4.5} fill={color(row.lane)} stroke="#1e1f22" strokeWidth={1.5} />
+      <circle
+        cx={cx(row.lane)}
+        cy={midY}
+        r={4.5}
+        fill={color(row.lane)}
+        stroke="rgb(var(--ide-panel))"
+        strokeWidth={1.5}
+      />
     </svg>
   )
 }

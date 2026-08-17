@@ -2,6 +2,65 @@
 @tailwind components;
 @tailwind utilities;
 
+/* JetBrains New UI (Darcula) - default theme. Values are space-separated RGB triplets so
+   Tailwind's `/<alpha>` opacity syntax (e.g. bg-ide-accent/15) works via rgb(var(..) / a). */
+:root {
+  --ide-bg: 30 31 34;
+  --ide-panel: 43 45 48;
+  --ide-panel-alt: 30 31 34;
+  --ide-border: 57 59 64;
+  --ide-text: 223 225 229;
+  --ide-text-dim: 111 115 122;
+  --ide-accent: 53 116 240;
+  --ide-accent-dim: 51 105 214;
+  --ide-hover: 43 45 48;
+  --ide-selected: 46 67 110;
+  --ide-selected-inactive: 57 59 64;
+  --ide-green: 73 156 84;
+  --ide-red: 219 92 92;
+  --ide-yellow: 214 174 88;
+  --ide-purple: 185 155 248;
+  --ide-cyan: 63 166 201;
+
+  --ide-heat-0: 43 45 48;
+  --ide-heat-1: 38 84 43;
+  --ide-heat-2: 49 109 56;
+  --ide-heat-3: 61 133 70;
+  --ide-heat-4: 73 156 84;
+
+  --ide-scrollbar-thumb: 75 77 82;
+  --ide-scrollbar-thumb-hover: 90 92 97;
+}
+
+/* JetBrains New UI Light theme */
+:root[data-theme='light'] {
+  --ide-bg: 242 242 242;
+  --ide-panel: 255 255 255;
+  --ide-panel-alt: 242 242 242;
+  --ide-border: 211 213 217;
+  --ide-text: 30 30 30;
+  --ide-text-dim: 107 107 107;
+  --ide-accent: 53 116 240;
+  --ide-accent-dim: 51 105 214;
+  --ide-hover: 232 232 232;
+  --ide-selected: 204 224 255;
+  --ide-selected-inactive: 224 224 224;
+  --ide-green: 45 158 79;
+  --ide-red: 204 55 48;
+  --ide-yellow: 166 127 0;
+  --ide-purple: 133 81 217;
+  --ide-cyan: 32 145 180;
+
+  --ide-heat-0: 235 237 240;
+  --ide-heat-1: 155 233 168;
+  --ide-heat-2: 64 196 99;
+  --ide-heat-3: 48 161 78;
+  --ide-heat-4: 33 110 57;
+
+  --ide-scrollbar-thumb: 190 192 196;
+  --ide-scrollbar-thumb-hover: 165 167 171;
+}
+
 html,
 body,
 #root {
@@ -40,12 +99,12 @@ body {
 }
 
 *:hover::-webkit-scrollbar-thumb {
-  background-color: #4b4d52;
+  background-color: rgb(var(--ide-scrollbar-thumb));
   background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #5a5c61;
+  background-color: rgb(var(--ide-scrollbar-thumb-hover));
 }
 
 ::-webkit-scrollbar-corner {

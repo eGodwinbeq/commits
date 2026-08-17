@@ -139,6 +139,7 @@ function createMainWindow() {
 }
 const IpcChannels = {
   appPing: "app:ping",
+  appSetTitleBarTheme: "app:setTitleBarTheme",
   repoOpenFolderDialog: "repo:openFolderDialog",
   repoValidate: "repo:validate",
   gitLog: "git:log",
@@ -162,6 +163,19 @@ const IpcChannels = {
   gitPull: "git:pull",
   gitFetch: "git:fetch"
 };
+const OVERLAY_COLORS = {
+  dark: { color: "#1e1f22", symbolColor: "#dfe1e5" },
+  light: { color: "#f2f2f2", symbolColor: "#1e1e1e" }
+};
+function registerAppHandlers() {
+  ipcMain.handle(IpcChannels.appSetTitleBarTheme, (evt, theme) => {
+    const win = BrowserWindow.fromWebContents(evt.sender);
+    try {
+      win?.setTitleBarOverlay({ ...OVERLAY_COLORS[theme], height: 40 });
+    } catch {
+    }
+  });
+}
 class GitCommandError extends Error {
   code;
   stderr;
@@ -633,6 +647,7 @@ function registerGitWriteHandlers() {
 }
 function registerIpcHandlers() {
   ipcMain.handle(IpcChannels.appPing, () => "pong");
+  registerAppHandlers();
   registerRepoHandlers();
   registerGitReadHandlers();
   registerGitWriteHandlers();
