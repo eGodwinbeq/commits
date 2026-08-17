@@ -21,3 +21,33 @@ body {
   font-size: 13px;
   overflow: hidden;
 }
+
+/* Thin, auto-hiding scrollbars in the JetBrains style rather than the chunky Chromium default */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 9999px;
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background-color: #4b4d52;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #5a5c61;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}

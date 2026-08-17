@@ -38,11 +38,11 @@ function RepoWorkspace(): React.JSX.Element {
   useAutoRefresh(repoPath)
 
   return (
-    <div className="flex h-full flex-col gap-4 bg-ide-bg p-3">
+    <div className="flex h-full flex-col gap-2 bg-ide-bg p-2">
       <div className="shrink-0 overflow-hidden rounded-lg border border-ide-border">
         <TopBar />
       </div>
-      <div className="flex min-h-0 flex-1 items-stretch gap-2">
+      <div className="flex min-h-0 flex-1 items-stretch gap-1.5">
         <div
           className="flex shrink-0 flex-col overflow-hidden rounded-lg border border-ide-border bg-ide-panelAlt"
           style={{ width: sidebarWidth }}

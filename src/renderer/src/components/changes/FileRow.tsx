@@ -10,8 +10,11 @@ const STATUS_LABEL: Record<FileStatusEntry['status'], string> = {
   conflicted: '!'
 }
 
+// Mirrors JetBrains' VCS file-status coloring convention (modified = blue, added = green,
+// deleted = red, unversioned = gray). Only the status letter is tinted - the filename
+// itself stays the default text color, matching the Git tool window's actual look.
 const STATUS_COLOR: Record<FileStatusEntry['status'], string> = {
-  modified: 'text-ide-yellow',
+  modified: 'text-ide-accent',
   added: 'text-ide-green',
   deleted: 'text-ide-red',
   renamed: 'text-ide-cyan',
@@ -39,7 +42,7 @@ export function FileRow({ file, isSelected, actionLabel, onSelect, onAction }: P
       <span className={`w-4 shrink-0 font-mono font-bold ${STATUS_COLOR[file.status]}`}>
         {STATUS_LABEL[file.status]}
       </span>
-      <span className="min-w-0 flex-1 truncate">{file.path}</span>
+      <span className="min-w-0 flex-1 truncate text-ide-text">{file.path}</span>
       <button
         className="hidden shrink-0 rounded border border-ide-border px-1.5 py-0.5 text-[11px] hover:bg-ide-hover group-hover:block"
         onClick={(e) => {
