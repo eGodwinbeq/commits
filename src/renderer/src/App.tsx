@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRepoStore } from './store/repoStore'
 import { useLogStore } from './store/logStore'
 import { useBranchStore } from './store/branchStore'
@@ -14,6 +14,9 @@ import { CommitLogTable } from './components/log/CommitLogTable'
 import { ChangesPanel } from './components/changes/ChangesPanel'
 import { DiffViewer } from './components/diff/DiffViewer'
 import { useAutoRefresh } from './lib/useAutoRefresh'
+import { ResizeHandle } from './components/common/ResizeHandle'
+
+const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value))
 
 function RepoWorkspace(): React.JSX.Element {
   const repoPath = useRepoStore((s) => s.repoPath)
@@ -21,6 +24,9 @@ function RepoWorkspace(): React.JSX.Element {
   const loadBranches = useBranchStore((s) => s.load)
   const loadStatus = useStatusStore((s) => s.load)
   const activeTab = useUiStore((s) => s.activeTab)
+
+  const [sidebarWidth, setSidebarWidth] = useState(256)
+  const [diffWidth, setDiffWidth] = useState(460)
 
   useEffect(() => {
     if (!repoPath) return
@@ -32,27 +38,39 @@ function RepoWorkspace(): React.JSX.Element {
   useAutoRefresh(repoPath)
 
   return (
-    <div className="flex h-screen flex-col">
-      <TopBar />
-      <div className="flex min-h-0 flex-1">
-        <div className="flex w-64 shrink-0 flex-col border-r border-ide-border bg-ide-panelAlt">
+    <div className="flex h-screen flex-col gap-2 bg-ide-bg p-2">
+      <div className="shrink-0 overflow-hidden rounded-lg border border-ide-border">
+        <TopBar />
+      </div>
+      <div className="flex min-h-0 flex-1 items-stretch">
+        <div
+          className="flex shrink-0 flex-col overflow-hidden rounded-lg border border-ide-border bg-ide-panelAlt"
+          style={{ width: sidebarWidth }}
+        >
           <SideNav />
           <div className="min-h-0 flex-1 overflow-auto">
             <BranchTree />
           </div>
         </div>
-        <div className="flex min-w-0 flex-1 flex-col">
-          <div className="flex min-h-0 flex-1">
-            <div className="min-w-0 flex-1 border-r border-ide-border">
-              {activeTab === 'log' ? <CommitLogTable /> : <ChangesPanel />}
-            </div>
-            <div className="w-[45%] min-w-[320px]">
-              <DiffViewer />
-            </div>
-          </div>
+
+        <ResizeHandle onResize={(dx) => setSidebarWidth((w) => clamp(w + dx, 180, 480))} />
+
+        <div className="min-w-0 flex-1 overflow-hidden rounded-lg border border-ide-border bg-ide-panel">
+          {activeTab === 'log' ? <CommitLogTable /> : <ChangesPanel />}
+        </div>
+
+        <ResizeHandle onResize={(dx) => setDiffWidth((w) => clamp(w - dx, 280, 900))} />
+
+        <div
+          className="shrink-0 overflow-hidden rounded-lg border border-ide-border bg-ide-panel"
+          style={{ width: diffWidth }}
+        >
+          <DiffViewer />
         </div>
       </div>
-      <StatusBar />
+      <div className="shrink-0 overflow-hidden rounded-lg border border-ide-border">
+        <StatusBar />
+      </div>
       <BranchSwitcherPopup />
     </div>
   )
@@ -63,7 +81,7 @@ export default function App(): React.JSX.Element {
   const repoName = useRepoStore((s) => s.repoName)
 
   useEffect(() => {
-    document.title = repoName ? `${repoName} — GitDesk` : 'GitDesk'
+    document.title = repoName ? `${repoName} — Commits` : 'Commits'
   }, [repoName])
 
   return repoPath ? <RepoWorkspace /> : <WelcomeScreen />

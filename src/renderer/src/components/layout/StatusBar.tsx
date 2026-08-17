@@ -4,7 +4,7 @@ export function StatusBar(): React.JSX.Element {
   const status = useStatusStore((s) => s.status)
 
   return (
-    <div className="flex h-6 shrink-0 items-center gap-3 border-t border-ide-border bg-ide-panel px-3 text-[11px] text-ide-textDim">
+    <div className="flex h-7 shrink-0 items-center gap-3 bg-ide-panel px-3 text-[11px] text-ide-textDim">
       <span>{status?.branch ?? ''}</span>
       {status && (status.ahead > 0 || status.behind > 0) && (
         <span>

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-const RECENT_KEY = 'gitdesk.recentRepos'
+const RECENT_KEY = 'commits.recentRepos'
 
 function loadRecent(): string[] {
   try {

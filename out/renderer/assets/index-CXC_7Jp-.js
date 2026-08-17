@@ -12538,7 +12538,7 @@ const createImpl = (createState) => {
   return useBoundStore;
 };
 const create = ((createState) => createState ? createImpl(createState) : createImpl);
-const RECENT_KEY = "gitdesk.recentRepos";
+const RECENT_KEY = "commits.recentRepos";
 function loadRecent() {
   try {
     return JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
@@ -12704,7 +12704,7 @@ function Button({
 function WelcomeScreen() {
   const { openFolderDialog, openRepo, recentRepos, error, isLoading } = useRepoStore();
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex h-full flex-col items-center justify-center gap-4", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-xl font-semibold text-ide-text", children: "GitDesk" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-xl font-semibold text-ide-text", children: "Commits" }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "primary", disabled: isLoading, onClick: openFolderDialog, children: "Open Repository…" }),
     error && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-ide-red", children: error }),
     recentRepos.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-96", children: [
@@ -12760,7 +12760,7 @@ function TopBar() {
     if (!result.ok) window.alert(result.error.message);
     await refresh();
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex h-11 shrink-0 items-center gap-2 border-b border-ide-border bg-ide-panel px-3", children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex h-14 shrink-0 items-center gap-2 bg-ide-panel px-3", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[13px] font-semibold text-ide-text", children: repoName }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       "button",
@@ -12781,7 +12781,7 @@ function TopBar() {
 }
 function StatusBar() {
   const status = useStatusStore((s) => s.status);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex h-6 shrink-0 items-center gap-3 border-t border-ide-border bg-ide-panel px-3 text-[11px] text-ide-textDim", children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex h-7 shrink-0 items-center gap-3 bg-ide-panel px-3 text-[11px] text-ide-textDim", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: status?.branch ?? "" }),
     status && (status.ahead > 0 || status.behind > 0) && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
       status.ahead > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-ide-green", children: [
@@ -12894,6 +12894,13 @@ function BranchContextMenu({
     items.push({
       label: `Rebase ${currentBranchName2} onto ${branch.name}`,
       onClick: () => run(() => window.gitApi.rebase(repoPath, branch.name))
+    });
+  }
+  if (branch.kind === "remote" && currentBranchName2) {
+    items.push({
+      label: `Pull Into ${currentBranchName2} (Merge)`,
+      onClick: () => run(() => window.gitApi.merge(repoPath, branch.name)),
+      separatorAfter: true
     });
   }
   if (branch.kind === "local") {
@@ -15115,12 +15122,52 @@ function useAutoRefresh(repoPath) {
     };
   }, [repoPath]);
 }
+function ResizeHandle({ onResize }) {
+  const dragging = reactExports.useRef(false);
+  const lastX = reactExports.useRef(0);
+  reactExports.useEffect(() => {
+    const onMove = (e) => {
+      if (!dragging.current) return;
+      const delta = e.clientX - lastX.current;
+      lastX.current = e.clientX;
+      onResize(delta);
+    };
+    const onUp = () => {
+      dragging.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [onResize]);
+  const onMouseDown = (e) => {
+    dragging.current = true;
+    lastX.current = e.clientX;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "div",
+    {
+      className: "group relative z-10 -mx-1 w-2 shrink-0 cursor-col-resize",
+      onMouseDown,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mx-auto h-full w-px bg-ide-border transition-colors group-hover:bg-ide-accent group-active:bg-ide-accent" })
+    }
+  );
+}
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 function RepoWorkspace() {
   const repoPath = useRepoStore((s) => s.repoPath);
   const loadLog = useLogStore((s) => s.load);
   const loadBranches = useBranchStore((s) => s.load);
   const loadStatus = useStatusStore((s) => s.load);
   const activeTab = useUiStore((s) => s.activeTab);
+  const [sidebarWidth, setSidebarWidth] = reactExports.useState(256);
+  const [diffWidth, setDiffWidth] = reactExports.useState(460);
   reactExports.useEffect(() => {
     if (!repoPath) return;
     loadLog(repoPath);
@@ -15128,19 +15175,33 @@ function RepoWorkspace() {
     loadStatus(repoPath);
   }, [repoPath]);
   useAutoRefresh(repoPath);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex h-screen flex-col", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(TopBar, {}),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex min-h-0 flex-1", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex w-64 shrink-0 flex-col border-r border-ide-border bg-ide-panelAlt", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(SideNav, {}),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-h-0 flex-1 overflow-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsx(BranchTree, {}) })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex min-w-0 flex-1 flex-col", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex min-h-0 flex-1", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-w-0 flex-1 border-r border-ide-border", children: activeTab === "log" ? /* @__PURE__ */ jsxRuntimeExports.jsx(CommitLogTable, {}) : /* @__PURE__ */ jsxRuntimeExports.jsx(ChangesPanel, {}) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-[45%] min-w-[320px]", children: /* @__PURE__ */ jsxRuntimeExports.jsx(DiffViewer, {}) })
-      ] }) })
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex h-screen flex-col gap-2 bg-ide-bg p-2", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "shrink-0 overflow-hidden rounded-lg border border-ide-border", children: /* @__PURE__ */ jsxRuntimeExports.jsx(TopBar, {}) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex min-h-0 flex-1 items-stretch", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: "flex shrink-0 flex-col overflow-hidden rounded-lg border border-ide-border bg-ide-panelAlt",
+          style: { width: sidebarWidth },
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(SideNav, {}),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-h-0 flex-1 overflow-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsx(BranchTree, {}) })
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(ResizeHandle, { onResize: (dx) => setSidebarWidth((w) => clamp(w + dx, 180, 480)) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-w-0 flex-1 overflow-hidden rounded-lg border border-ide-border bg-ide-panel", children: activeTab === "log" ? /* @__PURE__ */ jsxRuntimeExports.jsx(CommitLogTable, {}) : /* @__PURE__ */ jsxRuntimeExports.jsx(ChangesPanel, {}) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(ResizeHandle, { onResize: (dx) => setDiffWidth((w) => clamp(w - dx, 280, 900)) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "div",
+        {
+          className: "shrink-0 overflow-hidden rounded-lg border border-ide-border bg-ide-panel",
+          style: { width: diffWidth },
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx(DiffViewer, {})
+        }
+      )
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(StatusBar, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "shrink-0 overflow-hidden rounded-lg border border-ide-border", children: /* @__PURE__ */ jsxRuntimeExports.jsx(StatusBar, {}) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(BranchSwitcherPopup, {})
   ] });
 }
@@ -15148,7 +15209,7 @@ function App() {
   const repoPath = useRepoStore((s) => s.repoPath);
   const repoName = useRepoStore((s) => s.repoName);
   reactExports.useEffect(() => {
-    document.title = repoName ? `${repoName} — GitDesk` : "GitDesk";
+    document.title = repoName ? `${repoName} — Commits` : "Commits";
   }, [repoName]);
   return repoPath ? /* @__PURE__ */ jsxRuntimeExports.jsx(RepoWorkspace, {}) : /* @__PURE__ */ jsxRuntimeExports.jsx(WelcomeScreen, {});
 }

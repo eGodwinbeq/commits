@@ -629,7 +629,7 @@ function registerIpcHandlers() {
   registerGitWriteHandlers();
 }
 app.whenReady().then(() => {
-  electronApp.setAppUserModelId("com.gitdesk.app");
+  electronApp.setAppUserModelId("com.commits.app");
   app.on("browser-window-created", (_, window) => {
     optimizer.watchWindowShortcuts(window);
   });

@@ -4,7 +4,7 @@ import { createMainWindow } from './window'
 import { registerIpcHandlers } from './ipc/registerHandlers'
 
 app.whenReady().then(() => {
-  electronApp.setAppUserModelId('com.gitdesk.app')
+  electronApp.setAppUserModelId('com.commits.app')
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)

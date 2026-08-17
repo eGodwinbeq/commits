@@ -60,6 +60,14 @@ export function BranchContextMenu({
     })
   }
 
+  if (branch.kind === 'remote' && currentBranchName) {
+    items.push({
+      label: `Pull Into ${currentBranchName} (Merge)`,
+      onClick: () => run(() => window.gitApi.merge(repoPath!, branch.name)),
+      separatorAfter: true
+    })
+  }
+
   if (branch.kind === 'local') {
     items.push({
       label: 'Rename…',

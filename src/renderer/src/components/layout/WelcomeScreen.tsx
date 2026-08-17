@@ -6,7 +6,7 @@ export function WelcomeScreen(): React.JSX.Element {
 
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4">
-      <h1 className="text-xl font-semibold text-ide-text">GitDesk</h1>
+      <h1 className="text-xl font-semibold text-ide-text">Commits</h1>
       <Button variant="primary" disabled={isLoading} onClick={openFolderDialog}>
         Open Repository…
       </Button>
