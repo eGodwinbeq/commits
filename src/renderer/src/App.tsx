@@ -13,6 +13,7 @@ import { BranchSwitcherPopup } from './components/branches/BranchSwitcherPopup'
 import { CommitLogTable } from './components/log/CommitLogTable'
 import { ChangesPanel } from './components/changes/ChangesPanel'
 import { DiffViewer } from './components/diff/DiffViewer'
+import { ActivityView } from './components/activity/ActivityView'
 import { useAutoRefresh } from './lib/useAutoRefresh'
 import { ResizeHandle } from './components/common/ResizeHandle'
 
@@ -56,17 +57,23 @@ function RepoWorkspace(): React.JSX.Element {
         <ResizeHandle onResize={(dx) => setSidebarWidth((w) => clamp(w + dx, 180, 480))} />
 
         <div className="min-w-0 flex-1 overflow-hidden rounded-lg border border-ide-border bg-ide-panel">
-          {activeTab === 'log' ? <CommitLogTable /> : <ChangesPanel />}
+          {activeTab === 'log' && <CommitLogTable />}
+          {activeTab === 'changes' && <ChangesPanel />}
+          {activeTab === 'activity' && <ActivityView />}
         </div>
 
-        <ResizeHandle onResize={(dx) => setDiffWidth((w) => clamp(w - dx, 280, 900))} />
+        {activeTab !== 'activity' && (
+          <>
+            <ResizeHandle onResize={(dx) => setDiffWidth((w) => clamp(w - dx, 280, 900))} />
 
-        <div
-          className="shrink-0 overflow-hidden rounded-lg border border-ide-border bg-ide-panel"
-          style={{ width: diffWidth }}
-        >
-          <DiffViewer />
-        </div>
+            <div
+              className="shrink-0 overflow-hidden rounded-lg border border-ide-border bg-ide-panel"
+              style={{ width: diffWidth }}
+            >
+              <DiffViewer />
+            </div>
+          </>
+        )}
       </div>
       <div className="shrink-0 overflow-hidden rounded-lg border border-ide-border">
         <StatusBar />

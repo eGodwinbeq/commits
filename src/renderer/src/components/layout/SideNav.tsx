@@ -1,10 +1,11 @@
 import { useUiStore } from '../../store/uiStore'
-import { IconChanges, IconLog } from '../common/icons'
+import { IconActivity, IconChanges, IconLog } from '../common/icons'
 import { useStatusStore } from '../../store/statusStore'
 
 const ITEMS = [
   { key: 'changes', label: 'Changes', icon: IconChanges },
-  { key: 'log', label: 'Log', icon: IconLog }
+  { key: 'log', label: 'Log', icon: IconLog },
+  { key: 'activity', label: 'Activity', icon: IconActivity }
 ] as const
 
 export function SideNav(): React.JSX.Element {

@@ -25,6 +25,16 @@ export function IconLog({ className = 'h-4 w-4' }: IconProps): React.JSX.Element
   )
 }
 
+export function IconActivity({ className = 'h-4 w-4' }: IconProps): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <rect x="3" y="12" width="4" height="8" rx="1" stroke="currentColor" strokeWidth={1.7} />
+      <rect x="10" y="7" width="4" height="13" rx="1" stroke="currentColor" strokeWidth={1.7} />
+      <rect x="17" y="4" width="4" height="16" rx="1" stroke="currentColor" strokeWidth={1.7} />
+    </svg>
+  )
+}
+
 export function IconBranch({ className = 'h-3.5 w-3.5' }: IconProps): React.JSX.Element {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className}>
