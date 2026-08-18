@@ -36,6 +36,24 @@ async function validateRepo(path: string): Promise<GitResult<RepoInfo>> {
   return { ok: true, data: { path: root, name: basename(root) } }
 }
 
+async function getCommitCount(path: string): Promise<GitResult<number>> {
+  const emailResult = await execGit(path, ['config', 'user.email'])
+  const author = emailResult.code === 0 ? emailResult.stdout.toString('utf-8').trim() : ''
+
+  const args = ['rev-list', '--count', 'HEAD']
+  if (author) args.push(`--author=${author}`)
+
+  const result = await execGit(path, args)
+  if (result.code !== 0) {
+    return {
+      ok: false,
+      error: { code: 'GIT_ERROR', message: 'Could not count commits.', stderr: result.stderr }
+    }
+  }
+  const count = parseInt(result.stdout.toString('utf-8').trim(), 10)
+  return { ok: true, data: Number.isNaN(count) ? 0 : count }
+}
+
 async function trustDirectory(path: string): Promise<GitResult<void>> {
   const result = await execGit(homedir(), ['config', '--global', '--add', 'safe.directory', path])
   if (result.code !== 0) {
@@ -67,5 +85,9 @@ export function registerRepoHandlers(): void {
 
   ipcMain.handle(IpcChannels.repoTrustDirectory, async (_evt, path: string) => {
     return trustDirectory(path)
+  })
+
+  ipcMain.handle(IpcChannels.repoCommitCount, async (_evt, path: string) => {
+    return getCommitCount(path)
   })
 }

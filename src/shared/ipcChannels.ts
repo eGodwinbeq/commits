@@ -7,6 +7,7 @@ export const IpcChannels = {
   repoGetRecent: 'repo:getRecent',
   repoAddRecent: 'repo:addRecent',
   repoTrustDirectory: 'repo:trustDirectory',
+  repoCommitCount: 'repo:commitCount',
 
   gitLog: 'git:log',
   gitBranches: 'git:branches',
@@ -37,6 +38,10 @@ export const IpcChannels = {
   prCreate: 'pr:create',
   prMerge: 'pr:merge',
   prClose: 'pr:close',
+
+  ghStartDeviceAuth: 'gh:startDeviceAuth',
+  ghCancelDeviceAuth: 'gh:cancelDeviceAuth',
+  ghAuthEvent: 'gh:authEvent',
 
   aiGenerateCommitMessage: 'ai:generateCommitMessage',
   aiGetStatus: 'ai:getStatus',

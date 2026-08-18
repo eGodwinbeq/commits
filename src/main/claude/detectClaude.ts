@@ -50,21 +50,19 @@ let cached: ClaudeCliInfo | null = null
 export async function detectClaudeCli(forceRefresh = false): Promise<ClaudeCliInfo> {
   if (cached && !forceRefresh) return cached
 
-  const onPathVersion = await checkVersion('claude')
-  if (onPathVersion) {
-    cached = { available: true, path: 'claude', version: onPathVersion }
-    return cached
+  try {
+    // Check every candidate in parallel (each capped at 5s by checkVersion's own timeout) so
+    // detection never takes longer than the slowest single check, even with several
+    // candidates to try.
+    const candidates = ['claude', ...candidatePaths().filter((p) => existsSync(p))]
+    const results = await Promise.all(
+      candidates.map(async (path) => ({ path, version: await checkVersion(path) }))
+    )
+    const hit = results.find((r) => r.version)
+    cached = hit ? { available: true, path: hit.path, version: hit.version as string } : { available: false }
+  } catch {
+    cached = { available: false }
   }
 
-  for (const candidate of candidatePaths()) {
-    if (!existsSync(candidate)) continue
-    const version = await checkVersion(candidate)
-    if (version) {
-      cached = { available: true, path: candidate, version }
-      return cached
-    }
-  }
-
-  cached = { available: false }
   return cached
 }

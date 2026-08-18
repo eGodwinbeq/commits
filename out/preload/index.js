@@ -84,6 +84,7 @@ const IpcChannels = {
   repoOpenFolderDialog: "repo:openFolderDialog",
   repoValidate: "repo:validate",
   repoTrustDirectory: "repo:trustDirectory",
+  repoCommitCount: "repo:commitCount",
   gitLog: "git:log",
   gitBranches: "git:branches",
   gitStatus: "git:status",
@@ -110,7 +111,15 @@ const IpcChannels = {
   prCreate: "pr:create",
   prMerge: "pr:merge",
   prClose: "pr:close",
-  aiGenerateCommitMessage: "ai:generateCommitMessage"
+  ghStartDeviceAuth: "gh:startDeviceAuth",
+  ghCancelDeviceAuth: "gh:cancelDeviceAuth",
+  ghAuthEvent: "gh:authEvent",
+  aiGenerateCommitMessage: "ai:generateCommitMessage",
+  aiGetStatus: "ai:getStatus",
+  aiSetApiKey: "ai:setApiKey",
+  aiClearApiKey: "ai:clearApiKey",
+  aiTestClaudeCli: "ai:testClaudeCli",
+  aiLaunchClaudeSignIn: "ai:launchClaudeSignIn"
 };
 const gitApi = {
   ping: () => electron.ipcRenderer.invoke(IpcChannels.appPing),
@@ -118,6 +127,7 @@ const gitApi = {
   openFolderDialog: () => electron.ipcRenderer.invoke(IpcChannels.repoOpenFolderDialog),
   validateRepo: (path) => electron.ipcRenderer.invoke(IpcChannels.repoValidate, path),
   trustDirectory: (path) => electron.ipcRenderer.invoke(IpcChannels.repoTrustDirectory, path),
+  getCommitCount: (path) => electron.ipcRenderer.invoke(IpcChannels.repoCommitCount, path),
   getLog: (repoPath, opts) => electron.ipcRenderer.invoke(IpcChannels.gitLog, repoPath, opts),
   getBranches: (repoPath) => electron.ipcRenderer.invoke(IpcChannels.gitBranches, repoPath),
   getStatus: (repoPath) => electron.ipcRenderer.invoke(IpcChannels.gitStatus, repoPath),
@@ -144,7 +154,19 @@ const gitApi = {
   createPullRequest: (repoPath, opts) => electron.ipcRenderer.invoke(IpcChannels.prCreate, repoPath, opts),
   mergePullRequest: (repoPath, number, opts) => electron.ipcRenderer.invoke(IpcChannels.prMerge, repoPath, number, opts),
   closePullRequest: (repoPath, number) => electron.ipcRenderer.invoke(IpcChannels.prClose, repoPath, number),
-  generateCommitMessage: (repoPath) => electron.ipcRenderer.invoke(IpcChannels.aiGenerateCommitMessage, repoPath)
+  generateCommitMessage: (repoPath) => electron.ipcRenderer.invoke(IpcChannels.aiGenerateCommitMessage, repoPath),
+  getAiStatus: () => electron.ipcRenderer.invoke(IpcChannels.aiGetStatus),
+  setAiApiKey: (key) => electron.ipcRenderer.invoke(IpcChannels.aiSetApiKey, key),
+  clearAiApiKey: () => electron.ipcRenderer.invoke(IpcChannels.aiClearApiKey),
+  testClaudeCli: () => electron.ipcRenderer.invoke(IpcChannels.aiTestClaudeCli),
+  launchClaudeSignIn: () => electron.ipcRenderer.invoke(IpcChannels.aiLaunchClaudeSignIn),
+  startGithubDeviceAuth: () => electron.ipcRenderer.invoke(IpcChannels.ghStartDeviceAuth),
+  cancelGithubDeviceAuth: () => electron.ipcRenderer.invoke(IpcChannels.ghCancelDeviceAuth),
+  onGithubAuthEvent: (callback) => {
+    const listener = (_evt, data) => callback(data);
+    electron.ipcRenderer.on(IpcChannels.ghAuthEvent, listener);
+    return () => electron.ipcRenderer.removeListener(IpcChannels.ghAuthEvent, listener);
+  }
 };
 if (process.contextIsolated) {
   electron.contextBridge.exposeInMainWorld("electron", electronAPI);

@@ -1,7 +1,9 @@
-import { app, session, ipcMain, BrowserWindow, shell, dialog } from "electron";
+import { app, session, ipcMain, BrowserWindow, shell, dialog, safeStorage } from "electron";
 import { join, basename } from "path";
-import { spawn } from "child_process";
+import { spawn, execFile } from "child_process";
 import { homedir } from "os";
+import https from "https";
+import { existsSync, unlinkSync, writeFileSync, readFileSync } from "fs";
 import __cjs_mod__ from "node:module";
 const __filename = import.meta.filename;
 const __dirname = import.meta.dirname;
@@ -108,6 +110,7 @@ function createMainWindow() {
     show: false,
     autoHideMenuBar: true,
     backgroundColor: "#1e1f22",
+    icon: join(__dirname, "../../build/icon.png"),
     // Windows/Linux draw the native title bar at a fixed ~32px height. Using 'hidden' +
     // titleBarOverlay keeps the native min/max/close buttons but lets us pick the height
     // of the strip they sit in, so it can be taller than the OS default.
@@ -144,6 +147,7 @@ const IpcChannels = {
   repoOpenFolderDialog: "repo:openFolderDialog",
   repoValidate: "repo:validate",
   repoTrustDirectory: "repo:trustDirectory",
+  repoCommitCount: "repo:commitCount",
   gitLog: "git:log",
   gitBranches: "git:branches",
   gitStatus: "git:status",
@@ -170,7 +174,15 @@ const IpcChannels = {
   prCreate: "pr:create",
   prMerge: "pr:merge",
   prClose: "pr:close",
-  aiGenerateCommitMessage: "ai:generateCommitMessage"
+  ghStartDeviceAuth: "gh:startDeviceAuth",
+  ghCancelDeviceAuth: "gh:cancelDeviceAuth",
+  ghAuthEvent: "gh:authEvent",
+  aiGenerateCommitMessage: "ai:generateCommitMessage",
+  aiGetStatus: "ai:getStatus",
+  aiSetApiKey: "ai:setApiKey",
+  aiClearApiKey: "ai:clearApiKey",
+  aiTestClaudeCli: "ai:testClaudeCli",
+  aiLaunchClaudeSignIn: "ai:launchClaudeSignIn"
 };
 const OVERLAY_COLORS = {
   dark: { color: "#1e1f22", symbolColor: "#dfe1e5" },
@@ -194,11 +206,11 @@ class GitCommandError extends Error {
     this.stderr = stderr;
   }
 }
-const DEFAULT_TIMEOUT_MS = 3e4;
+const DEFAULT_TIMEOUT_MS$1 = 3e4;
 const NETWORK_TIMEOUT_MS = 12e4;
 const NETWORK_SUBCOMMANDS = /* @__PURE__ */ new Set(["push", "pull", "fetch", "clone"]);
 function execGit(repoPath, args, opts = {}) {
-  const timeoutMs = opts.timeoutMs ?? (NETWORK_SUBCOMMANDS.has(args[0]) ? NETWORK_TIMEOUT_MS : DEFAULT_TIMEOUT_MS);
+  const timeoutMs = opts.timeoutMs ?? (NETWORK_SUBCOMMANDS.has(args[0]) ? NETWORK_TIMEOUT_MS : DEFAULT_TIMEOUT_MS$1);
   return new Promise((resolve, reject) => {
     const child = spawn("git", args, {
       cwd: repoPath,
@@ -255,6 +267,21 @@ async function validateRepo(path) {
   const root = result.stdout.toString("utf-8").trim().replace(/\//g, "\\");
   return { ok: true, data: { path: root, name: basename(root) } };
 }
+async function getCommitCount(path) {
+  const emailResult = await execGit(path, ["config", "user.email"]);
+  const author = emailResult.code === 0 ? emailResult.stdout.toString("utf-8").trim() : "";
+  const args = ["rev-list", "--count", "HEAD"];
+  if (author) args.push(`--author=${author}`);
+  const result = await execGit(path, args);
+  if (result.code !== 0) {
+    return {
+      ok: false,
+      error: { code: "GIT_ERROR", message: "Could not count commits.", stderr: result.stderr }
+    };
+  }
+  const count = parseInt(result.stdout.toString("utf-8").trim(), 10);
+  return { ok: true, data: Number.isNaN(count) ? 0 : count };
+}
 async function trustDirectory(path) {
   const result = await execGit(homedir(), ["config", "--global", "--add", "safe.directory", path]);
   if (result.code !== 0) {
@@ -281,6 +308,9 @@ function registerRepoHandlers() {
   });
   ipcMain.handle(IpcChannels.repoTrustDirectory, async (_evt, path) => {
     return trustDirectory(path);
+  });
+  ipcMain.handle(IpcChannels.repoCommitCount, async (_evt, path) => {
+    return getCommitCount(path);
   });
 }
 const FORMAT_FIELD_SEP = "%x00";
@@ -783,9 +813,25 @@ async function run(repoPath, args) {
         "GH_NOT_AUTHENTICATED"
       );
     }
-    throw new GhCliError(stderr || `gh ${args[0]} failed`, "GH_ERROR");
+    if (/no git remotes found|does not appear to be a git repository|unknown host/i.test(stderr)) {
+      throw new GhCliError(
+        'This repository has no GitHub remote that "gh" can resolve. Check "git remote -v".',
+        "GH_ERROR"
+      );
+    }
+    throw new GhCliError(stderr || `gh ${args[0]} failed (exit ${result.code})`, "GH_ERROR");
   }
   return result.stdout.toString("utf-8");
+}
+function parseJson(out, context) {
+  try {
+    return JSON.parse(out);
+  } catch {
+    throw new GhCliError(
+      `Could not parse "gh"'s response while ${context}. Try running "gh --version" to confirm it's up to date.`,
+      "GH_ERROR"
+    );
+  }
 }
 async function listPullRequests(repoPath, state = "open") {
   const out = await run(repoPath, [
@@ -798,12 +844,12 @@ async function listPullRequests(repoPath, state = "open") {
     "--limit",
     "100"
   ]);
-  const raw = JSON.parse(out);
+  const raw = parseJson(out, "listing pull requests");
   return raw.map(toPr);
 }
 async function getPullRequest(repoPath, number) {
   const out = await run(repoPath, ["pr", "view", String(number), "--json", VIEW_FIELDS]);
-  return toPr(JSON.parse(out));
+  return toPr(parseJson(out, "loading the pull request"));
 }
 async function getPullRequestDiff(repoPath, number) {
   const out = await run(repoPath, ["pr", "diff", String(number)]);
@@ -811,7 +857,10 @@ async function getPullRequestDiff(repoPath, number) {
 }
 async function createPullRequest(repoPath, opts) {
   const args = ["pr", "create", "--title", opts.title, "--body", opts.body, "--base", opts.base];
+  if (opts.head) args.push("--head", opts.head);
   if (opts.draft) args.push("--draft");
+  if (opts.reviewers?.length) args.push("--reviewer", opts.reviewers.join(","));
+  if (opts.labels?.length) args.push("--label", opts.labels.join(","));
   const out = await run(repoPath, args);
   const match = out.trim().match(/\/pull\/(\d+)/);
   const number = match ? parseInt(match[1], 10) : NaN;
@@ -867,11 +916,11 @@ function registerPrHandlers() {
     (_evt, repoPath, number) => safe$1(() => closePullRequest(repoPath, number))
   );
 }
-const TIMEOUT_MS = 6e4;
-function execClaude(repoPath, prompt, stdinInput) {
+const DEFAULT_TIMEOUT_MS = 6e4;
+function execClaude(binPath, cwd, prompt, stdinInput, timeoutMs = DEFAULT_TIMEOUT_MS) {
   return new Promise((resolve, reject) => {
-    const child = spawn("claude", ["-p", prompt], {
-      cwd: repoPath,
+    const child = spawn(binPath, ["-p", prompt], {
+      cwd,
       windowsHide: true,
       env: { ...process.env }
     });
@@ -879,8 +928,8 @@ function execClaude(repoPath, prompt, stdinInput) {
     const stderrChunks = [];
     const timer = setTimeout(() => {
       child.kill();
-      reject(new Error(`claude timed out after ${TIMEOUT_MS}ms`));
-    }, TIMEOUT_MS);
+      reject(new Error(`claude timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
     child.stdout.on("data", (chunk) => stdoutChunks.push(chunk));
     child.stderr.on("data", (chunk) => stderrChunks.push(chunk));
     child.on("error", (err) => {
@@ -899,6 +948,153 @@ function execClaude(repoPath, prompt, stdinInput) {
     child.stdin.end();
   });
 }
+const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
+const TIMEOUT_MS = 3e4;
+function callAnthropicMessages(apiKey, opts) {
+  const body = JSON.stringify({
+    model: opts.model ?? DEFAULT_MODEL,
+    max_tokens: opts.maxTokens ?? 300,
+    system: opts.system,
+    messages: [{ role: "user", content: opts.userMessage }]
+  });
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      {
+        hostname: "api.anthropic.com",
+        path: "/v1/messages",
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "content-length": Buffer.byteLength(body)
+        },
+        timeout: TIMEOUT_MS
+      },
+      (res) => {
+        const chunks = [];
+        res.on("data", (chunk) => chunks.push(chunk));
+        res.on("end", () => {
+          const text = Buffer.concat(chunks).toString("utf-8");
+          if (!res.statusCode || res.statusCode >= 400) {
+            let message = `Anthropic API request failed (HTTP ${res.statusCode ?? "unknown"}).`;
+            try {
+              const parsed = JSON.parse(text);
+              if (parsed?.error?.message) message = parsed.error.message;
+            } catch {
+            }
+            reject(new Error(message));
+            return;
+          }
+          try {
+            const parsed = JSON.parse(text);
+            const content = parsed.content?.[0]?.text;
+            if (!content) {
+              reject(new Error("Anthropic API returned an empty response."));
+              return;
+            }
+            resolve(content);
+          } catch {
+            reject(new Error("Failed to parse the Anthropic API response."));
+          }
+        });
+      }
+    );
+    req.on("error", reject);
+    req.on("timeout", () => {
+      req.destroy();
+      reject(new Error("Anthropic API request timed out."));
+    });
+    req.write(body);
+    req.end();
+  });
+}
+function candidatePaths() {
+  const home = homedir();
+  if (process.platform === "win32") {
+    const localAppData = process.env.LOCALAPPDATA ?? join(home, "AppData", "Local");
+    const appData = process.env.APPDATA ?? join(home, "AppData", "Roaming");
+    const programFiles = process.env["ProgramFiles"] ?? "C:\\Program Files";
+    return [
+      join(home, ".claude", "local", "claude.exe"),
+      join(localAppData, "Programs", "claude-code", "claude.exe"),
+      join(localAppData, "AnthropicClaude", "claude.exe"),
+      join(programFiles, "Claude", "claude.exe"),
+      join(appData, "npm", "claude.cmd")
+    ];
+  }
+  if (process.platform === "darwin") {
+    return [
+      join(home, ".claude", "local", "claude"),
+      "/Applications/Claude.app/Contents/Resources/claude",
+      "/opt/homebrew/bin/claude",
+      "/usr/local/bin/claude"
+    ];
+  }
+  return [join(home, ".claude", "local", "claude"), "/usr/local/bin/claude"];
+}
+function checkVersion(binPath) {
+  return new Promise((resolve) => {
+    execFile(binPath, ["--version"], { timeout: 5e3, windowsHide: true }, (err, stdout) => {
+      resolve(err ? null : stdout.toString().trim());
+    });
+  });
+}
+let cached = null;
+async function detectClaudeCli(forceRefresh = false) {
+  if (cached && !forceRefresh) return cached;
+  try {
+    const candidates = ["claude", ...candidatePaths().filter((p) => existsSync(p))];
+    const results = await Promise.all(
+      candidates.map(async (path) => ({ path, version: await checkVersion(path) }))
+    );
+    const hit = results.find((r) => r.version);
+    cached = hit ? { available: true, path: hit.path, version: hit.version } : { available: false };
+  } catch {
+    cached = { available: false };
+  }
+  return cached;
+}
+function settingsPath() {
+  return join(app.getPath("userData"), "ai-settings.json");
+}
+function readStored() {
+  const p = settingsPath();
+  if (!existsSync(p)) return {};
+  try {
+    return JSON.parse(readFileSync(p, "utf-8"));
+  } catch {
+    return {};
+  }
+}
+function writeStored(data) {
+  writeFileSync(settingsPath(), JSON.stringify(data), "utf-8");
+}
+function getApiKey() {
+  const stored = readStored();
+  if (!stored.apiKeyEncrypted) return null;
+  const buf = Buffer.from(stored.apiKeyEncrypted, "base64");
+  if (!safeStorage.isEncryptionAvailable()) {
+    return buf.toString("utf-8");
+  }
+  try {
+    return safeStorage.decryptString(buf);
+  } catch {
+    return null;
+  }
+}
+function hasApiKey() {
+  return getApiKey() !== null;
+}
+function setApiKey(key) {
+  const trimmed = key.trim();
+  const encoded = safeStorage.isEncryptionAvailable() ? safeStorage.encryptString(trimmed) : Buffer.from(trimmed, "utf-8");
+  writeStored({ apiKeyEncrypted: encoded.toString("base64") });
+}
+function clearApiKey() {
+  const p = settingsPath();
+  if (existsSync(p)) unlinkSync(p);
+}
 class ClaudeCliError extends Error {
   code;
   constructor(message, code) {
@@ -907,24 +1103,47 @@ class ClaudeCliError extends Error {
   }
 }
 const MAX_DIFF_CHARS = 6e4;
-const INSTRUCTION = "You are generating a git commit message. Read the unified diff of staged changes given on stdin and write a single, well-formed commit message for it: a concise imperative-mood subject line (max ~72 chars), and if useful, a blank line followed by a short body explaining the why. Output ONLY the commit message text - no preamble, explanation, code fences, or surrounding quotes.";
+const INSTRUCTION = "You are generating a git commit message. Read the unified diff of staged changes given below and write a single, well-formed commit message for it: a concise imperative-mood subject line (max ~72 chars), and if useful, a blank line followed by a short body explaining the why. Output ONLY the commit message text - no preamble, explanation, code fences, or surrounding quotes.";
 async function generateCommitMessage(repoPath) {
   const diff = await getWorkingDiffText(repoPath, { staged: true });
   if (!diff.trim()) {
     throw new ClaudeCliError("No staged changes to generate a message for.", "CLAUDE_NO_CHANGES");
   }
-  const stdinPayload = diff.length > MAX_DIFF_CHARS ? `${diff.slice(0, MAX_DIFF_CHARS)}
+  const diffPayload = diff.length > MAX_DIFF_CHARS ? `${diff.slice(0, MAX_DIFF_CHARS)}
 
 [diff truncated - showing first ${MAX_DIFF_CHARS} characters only]` : diff;
+  const apiKey = getApiKey();
+  if (apiKey) {
+    try {
+      const text = await callAnthropicMessages(apiKey, {
+        system: INSTRUCTION,
+        userMessage: `Staged diff:
+
+${diffPayload}`
+      });
+      const message2 = text.trim();
+      if (!message2) throw new Error("Anthropic API returned an empty response.");
+      return message2;
+    } catch (err) {
+      throw new ClaudeCliError(err instanceof Error ? err.message : String(err), "CLAUDE_ERROR");
+    }
+  }
+  const cli = await detectClaudeCli();
+  if (!cli.available || !cli.path) {
+    throw new ClaudeCliError(
+      "No AI connection configured. Add an Anthropic API key or connect Claude Code in Settings.",
+      "CLAUDE_NOT_CONFIGURED"
+    );
+  }
   let result;
   try {
-    result = await execClaude(repoPath, INSTRUCTION, stdinPayload);
+    result = await execClaude(cli.path, repoPath, INSTRUCTION, diffPayload);
   } catch (err) {
     const message2 = err instanceof Error ? err.message : String(err);
     if (/ENOENT/.test(message2)) {
       throw new ClaudeCliError(
-        'Claude Code CLI ("claude") was not found on PATH. Install it and run "claude" once to sign in.',
-        "CLAUDE_NOT_FOUND"
+        "No AI connection configured. Add an Anthropic API key or connect Claude Code in Settings.",
+        "CLAUDE_NOT_CONFIGURED"
       );
     }
     throw new ClaudeCliError(message2, "CLAUDE_ERROR");
@@ -941,6 +1160,29 @@ async function generateCommitMessage(repoPath) {
   }
   return message;
 }
+function launchClaudeInTerminal(binPath) {
+  if (process.platform === "win32") {
+    const child2 = spawn("cmd.exe", ["/c", "start", '""', "cmd.exe", "/k", binPath], {
+      detached: true,
+      windowsHide: false,
+      stdio: "ignore"
+    });
+    child2.unref();
+    return;
+  }
+  if (process.platform === "darwin") {
+    const escaped = binPath.replace(/"/g, '\\"');
+    const child2 = spawn("osascript", ["-e", `tell application "Terminal" to do script "${escaped}"`], {
+      detached: true,
+      stdio: "ignore"
+    });
+    child2.unref();
+    return;
+  }
+  const child = spawn("x-terminal-emulator", ["-e", binPath], { detached: true, stdio: "ignore" });
+  child.unref();
+}
+const TEST_TIMEOUT_MS = 2e4;
 async function safe(fn) {
   try {
     return { ok: true, data: await fn() };
@@ -959,6 +1201,153 @@ function registerAiHandlers() {
     IpcChannels.aiGenerateCommitMessage,
     (_evt, repoPath) => safe(() => generateCommitMessage(repoPath))
   );
+  ipcMain.handle(IpcChannels.aiGetStatus, async () => {
+    try {
+      const cli = await detectClaudeCli();
+      return {
+        ok: true,
+        data: {
+          hasApiKey: hasApiKey(),
+          cliAvailable: cli.available,
+          cliVersion: cli.version,
+          cliPath: cli.path
+        }
+      };
+    } catch (err) {
+      return {
+        ok: false,
+        error: { code: "AI_STATUS_ERROR", message: err instanceof Error ? err.message : String(err) }
+      };
+    }
+  });
+  ipcMain.handle(IpcChannels.aiSetApiKey, (_evt, key) => {
+    if (!key || !key.trim()) {
+      return Promise.resolve({
+        ok: false,
+        error: { code: "INVALID_KEY", message: "API key cannot be empty." }
+      });
+    }
+    setApiKey(key);
+    return Promise.resolve({ ok: true, data: void 0 });
+  });
+  ipcMain.handle(IpcChannels.aiClearApiKey, () => {
+    clearApiKey();
+    return Promise.resolve({ ok: true, data: void 0 });
+  });
+  ipcMain.handle(
+    IpcChannels.aiTestClaudeCli,
+    () => safe(async () => {
+      const cli = await detectClaudeCli(true);
+      if (!cli.available || !cli.path) {
+        throw new ClaudeCliError(
+          'Claude Code was not found. Install it, or use "Open Claude Code to Sign In" once it is.',
+          "CLAUDE_NOT_CONFIGURED"
+        );
+      }
+      const result = await execClaude(
+        cli.path,
+        homedir(),
+        "Reply with exactly the single word OK and nothing else.",
+        "",
+        TEST_TIMEOUT_MS
+      );
+      if (result.code !== 0) {
+        throw new ClaudeCliError(
+          result.stderr.trim() || "Claude Code did not respond successfully - you may need to sign in first.",
+          "CLAUDE_ERROR"
+        );
+      }
+      const reply = result.stdout.toString("utf-8").trim();
+      return reply || "Connected";
+    })
+  );
+  ipcMain.handle(
+    IpcChannels.aiLaunchClaudeSignIn,
+    () => safe(async () => {
+      const cli = await detectClaudeCli();
+      if (!cli.available || !cli.path) {
+        throw new ClaudeCliError(
+          "Claude Code was not found on this machine. Install it first.",
+          "CLAUDE_NOT_CONFIGURED"
+        );
+      }
+      launchClaudeInTerminal(cli.path);
+    })
+  );
+}
+let activeChild = null;
+const DEVICE_CODE_RE = /([A-Z0-9]{4}-[A-Z0-9]{4})/;
+function startGithubDeviceAuth(onEvent) {
+  if (activeChild) {
+    onEvent({ type: "error", message: "A GitHub sign-in is already in progress." });
+    return;
+  }
+  let child;
+  try {
+    child = spawn(
+      "gh",
+      ["auth", "login", "--hostname", "github.com", "--git-protocol", "https", "--web"],
+      { windowsHide: true, env: { ...process.env } }
+    );
+  } catch (err) {
+    onEvent({ type: "error", message: err instanceof Error ? err.message : String(err) });
+    return;
+  }
+  activeChild = child;
+  let buffer = "";
+  let codeSent = false;
+  const handleChunk = (chunk) => {
+    buffer += chunk.toString("utf-8");
+    if (codeSent) return;
+    const match = buffer.match(DEVICE_CODE_RE);
+    if (match) {
+      codeSent = true;
+      onEvent({ type: "code", code: match[1], url: "https://github.com/login/device" });
+      child.stdin.write("\n");
+    }
+  };
+  child.stdout.on("data", handleChunk);
+  child.stderr.on("data", handleChunk);
+  child.on("error", (err) => {
+    activeChild = null;
+    onEvent({
+      type: "error",
+      message: /ENOENT/.test(err.message) ? 'GitHub CLI ("gh") was not found on PATH.' : err.message
+    });
+  });
+  child.on("close", (exitCode) => {
+    activeChild = null;
+    if (exitCode === 0) {
+      onEvent({ type: "done", ok: true });
+    } else {
+      onEvent({
+        type: "done",
+        ok: false,
+        message: buffer.trim() || `gh auth login exited with code ${exitCode}`
+      });
+    }
+  });
+}
+function cancelGithubDeviceAuth() {
+  if (activeChild) {
+    activeChild.kill();
+    activeChild = null;
+  }
+}
+function registerGhAuthHandlers() {
+  ipcMain.handle(IpcChannels.ghStartDeviceAuth, (evt) => {
+    startGithubDeviceAuth((event) => {
+      if (event.type === "code" && event.url) {
+        shell.openExternal(event.url);
+      }
+      if (!evt.sender.isDestroyed()) {
+        evt.sender.send(IpcChannels.ghAuthEvent, event);
+      }
+    });
+  });
+  ipcMain.handle(IpcChannels.ghCancelDeviceAuth, () => {
+    cancelGithubDeviceAuth();
+  });
 }
 function registerIpcHandlers() {
   ipcMain.handle(IpcChannels.appPing, () => "pong");
@@ -968,6 +1357,7 @@ function registerIpcHandlers() {
   registerGitWriteHandlers();
   registerPrHandlers();
   registerAiHandlers();
+  registerGhAuthHandlers();
 }
 app.whenReady().then(() => {
   electronApp.setAppUserModelId("com.commits.app");

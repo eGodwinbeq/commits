@@ -24,6 +24,8 @@ export function computeGraphLayout(commits: Commit[]): GraphRow[] {
   const rows: GraphRow[] = []
 
   for (const commit of commits) {
+    const before = activeLanes.slice()
+
     let lane = findLane(commit.sha)
     if (lane === -1) {
       lane = allocateLane()
@@ -62,12 +64,22 @@ export function computeGraphLayout(commits: Commit[]): GraphRow[] {
     // (occupant sha appears exactly once in activeLanes and nothing points to it anymore
     // is handled implicitly: a lane stays occupied until its sha is reached as a row)
 
+    // A lane other than this row's own is a genuine pass-through only if it already had a
+    // pending commit before this row AND this row left it completely untouched - otherwise
+    // it has no business getting a line drawn through this row.
+    const passThroughLanes: number[] = []
+    for (let i = 0; i < activeLanes.length; i++) {
+      if (i === lane) continue
+      if (before[i] != null && activeLanes[i] === before[i]) passThroughLanes.push(i)
+    }
+
     rows.push({
       commit,
       lane,
       laneCount: activeLanes.length,
       color: laneColor.get(lane) ?? 0,
-      edges
+      edges,
+      passThroughLanes
     })
   }
 

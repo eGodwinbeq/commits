@@ -6,6 +6,7 @@ import { Button } from '../common/Button'
 export function SettingsModal({ onClose }: { onClose: () => void }): React.JSX.Element {
   const status = useAiStore((s) => s.status)
   const isLoading = useAiStore((s) => s.isLoading)
+  const statusError = useAiStore((s) => s.error)
   const refresh = useAiStore((s) => s.refresh)
   const saveApiKey = useAiStore((s) => s.saveApiKey)
   const removeApiKey = useAiStore((s) => s.removeApiKey)
@@ -57,6 +58,17 @@ export function SettingsModal({ onClose }: { onClose: () => void }): React.JSX.E
 
       {isLoading && !status && (
         <div className="text-[12px] text-ide-textDim">Checking connection…</div>
+      )}
+
+      {statusError && !isLoading && (
+        <div className="mb-3 rounded border border-ide-red/40 bg-ide-red/10 p-2.5 text-[12px] text-ide-red">
+          <div className="flex items-start justify-between gap-2">
+            <span>Couldn&apos;t check AI connection status: {statusError}</span>
+            <button className="shrink-0 text-ide-accent hover:underline" onClick={() => refresh()}>
+              Retry
+            </button>
+          </div>
+        </div>
       )}
 
       {status && (

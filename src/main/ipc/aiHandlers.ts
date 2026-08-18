@@ -31,14 +31,21 @@ export function registerAiHandlers(): void {
   )
 
   ipcMain.handle(IpcChannels.aiGetStatus, async (): Promise<GitResult<AiStatus>> => {
-    const cli = await detectClaudeCli()
-    return {
-      ok: true,
-      data: {
-        hasApiKey: hasApiKey(),
-        cliAvailable: cli.available,
-        cliVersion: cli.version,
-        cliPath: cli.path
+    try {
+      const cli = await detectClaudeCli()
+      return {
+        ok: true,
+        data: {
+          hasApiKey: hasApiKey(),
+          cliAvailable: cli.available,
+          cliVersion: cli.version,
+          cliPath: cli.path
+        }
+      }
+    } catch (err) {
+      return {
+        ok: false,
+        error: { code: 'AI_STATUS_ERROR', message: err instanceof Error ? err.message : String(err) }
       }
     }
   })

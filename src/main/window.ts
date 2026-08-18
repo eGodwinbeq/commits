@@ -11,6 +11,7 @@ export function createMainWindow(): BrowserWindow {
     show: false,
     autoHideMenuBar: true,
     backgroundColor: '#1e1f22',
+    icon: join(__dirname, '../../build/icon.png'),
     // Windows/Linux draw the native title bar at a fixed ~32px height. Using 'hidden' +
     // titleBarOverlay keeps the native min/max/close buttons but lets us pick the height
     // of the strip they sit in, so it can be taller than the OS default.

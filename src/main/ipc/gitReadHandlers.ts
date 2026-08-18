@@ -20,8 +20,11 @@ async function safe<T>(fn: () => Promise<T>): Promise<GitResult<T>> {
 export function registerGitReadHandlers(): void {
   ipcMain.handle(
     IpcChannels.gitLog,
-    (_evt, repoPath: string, opts?: { maxCount?: number; skip?: number }): Promise<GitResult<Commit[]>> =>
-      safe(() => getLog(repoPath, opts))
+    (
+      _evt,
+      repoPath: string,
+      opts?: { maxCount?: number; skip?: number; branch?: string }
+    ): Promise<GitResult<Commit[]>> => safe(() => getLog(repoPath, opts))
   )
 
   ipcMain.handle(

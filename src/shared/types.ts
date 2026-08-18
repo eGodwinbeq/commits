@@ -110,6 +110,14 @@ export interface CommitDetail {
   files: DiffFile[]
 }
 
+export interface GithubAuthEvent {
+  type: 'code' | 'done' | 'error'
+  code?: string
+  url?: string
+  ok?: boolean
+  message?: string
+}
+
 export interface AiStatus {
   hasApiKey: boolean
   cliAvailable: boolean

@@ -30,31 +30,21 @@ export function CommitGraphColumn({ row, prevRow }: Props): React.JSX.Element {
 
   const color = (lane: number): string => LANE_COLORS[lane % LANE_COLORS.length]
 
-  const passThroughLanes = new Set<number>()
-  if (prevRow) {
-    for (const e of prevRow.edges) {
-      if (e.toLane !== row.lane && e.toLane === e.fromLane) passThroughLanes.add(e.toLane)
-    }
-  }
-
   return (
     <svg width={width} height={ROW_HEIGHT} className="shrink-0 overflow-visible">
-      {/* pass-through vertical lines for lanes not involved in this row's node */}
-      {Array.from({ length: row.laneCount }).map((_, lane) => {
-        if (lane === row.lane) return null
-        return (
-          <line
-            key={`pt-${lane}`}
-            x1={cx(lane)}
-            y1={0}
-            x2={cx(lane)}
-            y2={ROW_HEIGHT}
-            stroke={color(lane)}
-            strokeWidth={2}
-            opacity={0.5}
-          />
-        )
-      })}
+      {/* pass-through vertical lines only for lanes genuinely still pending at this row */}
+      {row.passThroughLanes.map((lane) => (
+        <line
+          key={`pt-${lane}`}
+          x1={cx(lane)}
+          y1={0}
+          x2={cx(lane)}
+          y2={ROW_HEIGHT}
+          stroke={color(lane)}
+          strokeWidth={2}
+          opacity={0.5}
+        />
+      ))}
 
       {/* incoming edge from previous row into this row's node */}
       {prevRow?.edges.some((e) => e.toLane === row.lane) && (

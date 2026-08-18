@@ -1,10 +1,11 @@
-import { ipcRenderer } from 'electron'
+import { ipcRenderer, type IpcRendererEvent } from 'electron'
 import { IpcChannels } from '@shared/ipcChannels'
 import type {
   AiStatus,
   Branch,
   Commit,
   DiffFile,
+  GithubAuthEvent,
   GitResult,
   PrMergeMethod,
   PrStateFilter,
@@ -25,9 +26,13 @@ export const gitApi = {
     ipcRenderer.invoke(IpcChannels.repoValidate, path),
   trustDirectory: (path: string): Promise<GitResult<void>> =>
     ipcRenderer.invoke(IpcChannels.repoTrustDirectory, path),
+  getCommitCount: (path: string): Promise<GitResult<number>> =>
+    ipcRenderer.invoke(IpcChannels.repoCommitCount, path),
 
-  getLog: (repoPath: string, opts?: { maxCount?: number; skip?: number }): Promise<GitResult<Commit[]>> =>
-    ipcRenderer.invoke(IpcChannels.gitLog, repoPath, opts),
+  getLog: (
+    repoPath: string,
+    opts?: { maxCount?: number; skip?: number; branch?: string }
+  ): Promise<GitResult<Commit[]>> => ipcRenderer.invoke(IpcChannels.gitLog, repoPath, opts),
   getBranches: (repoPath: string): Promise<GitResult<Branch[]>> =>
     ipcRenderer.invoke(IpcChannels.gitBranches, repoPath),
   getStatus: (repoPath: string): Promise<GitResult<RepoStatus>> =>
@@ -117,7 +122,15 @@ export const gitApi = {
   clearAiApiKey: (): Promise<GitResult<void>> => ipcRenderer.invoke(IpcChannels.aiClearApiKey),
   testClaudeCli: (): Promise<GitResult<string>> => ipcRenderer.invoke(IpcChannels.aiTestClaudeCli),
   launchClaudeSignIn: (): Promise<GitResult<void>> =>
-    ipcRenderer.invoke(IpcChannels.aiLaunchClaudeSignIn)
+    ipcRenderer.invoke(IpcChannels.aiLaunchClaudeSignIn),
+
+  startGithubDeviceAuth: (): Promise<void> => ipcRenderer.invoke(IpcChannels.ghStartDeviceAuth),
+  cancelGithubDeviceAuth: (): Promise<void> => ipcRenderer.invoke(IpcChannels.ghCancelDeviceAuth),
+  onGithubAuthEvent: (callback: (event: GithubAuthEvent) => void): (() => void) => {
+    const listener = (_evt: IpcRendererEvent, data: GithubAuthEvent): void => callback(data)
+    ipcRenderer.on(IpcChannels.ghAuthEvent, listener)
+    return () => ipcRenderer.removeListener(IpcChannels.ghAuthEvent, listener)
+  }
 }
 
 export type GitApi = typeof gitApi

@@ -7,6 +7,7 @@ import { IconRefresh } from '../common/icons'
 import { PrListRow } from './PrListRow'
 import { PrDetailPanel } from './PrDetailPanel'
 import { CreatePrModal } from './CreatePrModal'
+import { GithubAuthModal } from './GithubAuthModal'
 
 const FILTERS: { key: PrStateFilter; label: string }[] = [
   { key: 'open', label: 'Open' },
@@ -23,6 +24,7 @@ export function PullRequestsPanel(): React.JSX.Element {
   const select = usePrStore((s) => s.select)
   const clearSelection = usePrStore((s) => s.clearSelection)
   const [showCreate, setShowCreate] = useState(false)
+  const [showGithubAuth, setShowGithubAuth] = useState(false)
 
   useEffect(() => {
     if (repoPath) load(repoPath)
@@ -91,9 +93,10 @@ export function PullRequestsPanel(): React.JSX.Element {
                 </div>
               )}
               {errorCode === 'GH_NOT_AUTHENTICATED' && (
-                <div className="mt-1 text-ide-textDim">
-                  Run <code className="text-ide-text">gh auth login</code> in a terminal, then
-                  retry.
+                <div className="mt-2">
+                  <Button variant="default" onClick={() => setShowGithubAuth(true)}>
+                    Sign in to GitHub
+                  </Button>
                 </div>
               )}
             </div>
@@ -119,6 +122,12 @@ export function PullRequestsPanel(): React.JSX.Element {
       </div>
 
       {showCreate && <CreatePrModal onClose={() => setShowCreate(false)} />}
+      {showGithubAuth && (
+        <GithubAuthModal
+          onClose={() => setShowGithubAuth(false)}
+          onSuccess={() => repoPath && load(repoPath)}
+        />
+      )}
     </div>
   )
 }
