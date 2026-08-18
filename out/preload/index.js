@@ -83,6 +83,7 @@ const IpcChannels = {
   appSetTitleBarTheme: "app:setTitleBarTheme",
   repoOpenFolderDialog: "repo:openFolderDialog",
   repoValidate: "repo:validate",
+  repoTrustDirectory: "repo:trustDirectory",
   gitLog: "git:log",
   gitBranches: "git:branches",
   gitStatus: "git:status",
@@ -102,13 +103,21 @@ const IpcChannels = {
   gitRebase: "git:rebase",
   gitPush: "git:push",
   gitPull: "git:pull",
-  gitFetch: "git:fetch"
+  gitFetch: "git:fetch",
+  prList: "pr:list",
+  prGet: "pr:get",
+  prDiff: "pr:diff",
+  prCreate: "pr:create",
+  prMerge: "pr:merge",
+  prClose: "pr:close",
+  aiGenerateCommitMessage: "ai:generateCommitMessage"
 };
 const gitApi = {
   ping: () => electron.ipcRenderer.invoke(IpcChannels.appPing),
   setTitleBarTheme: (theme) => electron.ipcRenderer.invoke(IpcChannels.appSetTitleBarTheme, theme),
   openFolderDialog: () => electron.ipcRenderer.invoke(IpcChannels.repoOpenFolderDialog),
   validateRepo: (path) => electron.ipcRenderer.invoke(IpcChannels.repoValidate, path),
+  trustDirectory: (path) => electron.ipcRenderer.invoke(IpcChannels.repoTrustDirectory, path),
   getLog: (repoPath, opts) => electron.ipcRenderer.invoke(IpcChannels.gitLog, repoPath, opts),
   getBranches: (repoPath) => electron.ipcRenderer.invoke(IpcChannels.gitBranches, repoPath),
   getStatus: (repoPath) => electron.ipcRenderer.invoke(IpcChannels.gitStatus, repoPath),
@@ -120,7 +129,7 @@ const gitApi = {
   unstagePaths: (repoPath, paths) => electron.ipcRenderer.invoke(IpcChannels.gitUnstagePaths, repoPath, paths),
   discardChanges: (repoPath, path) => electron.ipcRenderer.invoke(IpcChannels.gitDiscardChanges, repoPath, path),
   commit: (repoPath, message, opts) => electron.ipcRenderer.invoke(IpcChannels.gitCommit, repoPath, message, opts),
-  checkout: (repoPath, ref) => electron.ipcRenderer.invoke(IpcChannels.gitCheckout, repoPath, ref),
+  checkout: (repoPath, ref, kind) => electron.ipcRenderer.invoke(IpcChannels.gitCheckout, repoPath, ref, kind),
   createBranch: (repoPath, name, startPoint, doCheckout) => electron.ipcRenderer.invoke(IpcChannels.gitCreateBranch, repoPath, name, startPoint, doCheckout),
   renameBranch: (repoPath, oldName, newName) => electron.ipcRenderer.invoke(IpcChannels.gitRenameBranch, repoPath, oldName, newName),
   deleteBranch: (repoPath, name, force) => electron.ipcRenderer.invoke(IpcChannels.gitDeleteBranch, repoPath, name, force),
@@ -128,7 +137,14 @@ const gitApi = {
   rebase: (repoPath, ontoRef) => electron.ipcRenderer.invoke(IpcChannels.gitRebase, repoPath, ontoRef),
   push: (repoPath, opts) => electron.ipcRenderer.invoke(IpcChannels.gitPush, repoPath, opts),
   pull: (repoPath, opts) => electron.ipcRenderer.invoke(IpcChannels.gitPull, repoPath, opts),
-  fetch: (repoPath, remote) => electron.ipcRenderer.invoke(IpcChannels.gitFetch, repoPath, remote)
+  fetch: (repoPath, remote) => electron.ipcRenderer.invoke(IpcChannels.gitFetch, repoPath, remote),
+  listPullRequests: (repoPath, state) => electron.ipcRenderer.invoke(IpcChannels.prList, repoPath, state),
+  getPullRequest: (repoPath, number) => electron.ipcRenderer.invoke(IpcChannels.prGet, repoPath, number),
+  getPullRequestDiff: (repoPath, number) => electron.ipcRenderer.invoke(IpcChannels.prDiff, repoPath, number),
+  createPullRequest: (repoPath, opts) => electron.ipcRenderer.invoke(IpcChannels.prCreate, repoPath, opts),
+  mergePullRequest: (repoPath, number, opts) => electron.ipcRenderer.invoke(IpcChannels.prMerge, repoPath, number, opts),
+  closePullRequest: (repoPath, number) => electron.ipcRenderer.invoke(IpcChannels.prClose, repoPath, number),
+  generateCommitMessage: (repoPath) => electron.ipcRenderer.invoke(IpcChannels.aiGenerateCommitMessage, repoPath)
 };
 if (process.contextIsolated) {
   electron.contextBridge.exposeInMainWorld("electron", electronAPI);

@@ -49,7 +49,15 @@ export function registerPrHandlers(): void {
     (
       _evt,
       repoPath: string,
-      opts: { title: string; body: string; base: string; draft?: boolean }
+      opts: {
+        title: string
+        body: string
+        base: string
+        head?: string
+        draft?: boolean
+        reviewers?: string[]
+        labels?: string[]
+      }
     ): Promise<GitResult<PullRequest>> => safe(() => createPullRequest(repoPath, opts))
   )
 

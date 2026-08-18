@@ -5,7 +5,9 @@ import { useUiStore } from '../../store/uiStore'
 import { useTaskStore } from '../../store/taskStore'
 import { Button } from '../common/Button'
 import { ThemeToggle } from '../common/ThemeToggle'
+import { IconGear } from '../common/icons'
 import { invalidate } from '../../lib/invalidate'
+import { SettingsModal } from './SettingsModal'
 
 type BusyAction = 'push' | 'fetch' | 'pull' | 'refresh' | null
 
@@ -18,6 +20,7 @@ export function TopBar(): React.JSX.Element {
   const setActiveTask = useTaskStore((s) => s.setActiveTask)
   const head = currentBranchName(branches)
   const [busy, setBusy] = useState<BusyAction>(null)
+  const [showSettings, setShowSettings] = useState(false)
 
   const run = async (action: BusyAction, label: string, fn: () => Promise<void>): Promise<void> => {
     setBusy(action)
@@ -88,8 +91,16 @@ export function TopBar(): React.JSX.Element {
         <Button variant="ghost" onClick={closeRepo}>
           Close
         </Button>
+        <button
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-ide-textDim hover:bg-ide-hover hover:text-ide-text"
+          title="Settings"
+          onClick={() => setShowSettings(true)}
+        >
+          <IconGear className="h-4 w-4" />
+        </button>
         <ThemeToggle />
       </div>
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
     </div>
   )
 }

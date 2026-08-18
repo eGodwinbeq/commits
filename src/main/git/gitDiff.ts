@@ -74,10 +74,10 @@ export function parseUnifiedDiff(text: string): DiffFile[] {
   return files
 }
 
-export async function getWorkingDiff(
+export async function getWorkingDiffText(
   repoPath: string,
   opts: { path?: string; staged?: boolean } = {}
-): Promise<DiffFile[]> {
+): Promise<string> {
   const args = ['diff', '--no-color', '-M']
   if (opts.staged) args.push('--cached')
   if (opts.path) args.push('--', opts.path)
@@ -86,7 +86,14 @@ export async function getWorkingDiff(
   if (result.code !== 0 && result.code !== 1) {
     throw new Error(`git diff failed: ${result.stderr}`)
   }
-  return parseUnifiedDiff(result.stdout.toString('utf-8'))
+  return result.stdout.toString('utf-8')
+}
+
+export async function getWorkingDiff(
+  repoPath: string,
+  opts: { path?: string; staged?: boolean } = {}
+): Promise<DiffFile[]> {
+  return parseUnifiedDiff(await getWorkingDiffText(repoPath, opts))
 }
 
 export async function getCommitDiff(repoPath: string, sha: string): Promise<DiffFile[]> {

@@ -36,7 +36,12 @@ export const IpcChannels = {
   prDiff: 'pr:diff',
   prCreate: 'pr:create',
   prMerge: 'pr:merge',
-  prClose: 'pr:close'
+  prClose: 'pr:close',
+
+  aiGenerateCommitMessage: 'ai:generateCommitMessage',
+  aiGetStatus: 'ai:getStatus',
+  aiSetApiKey: 'ai:setApiKey',
+  aiClearApiKey: 'ai:clearApiKey'
 } as const
 
 export type IpcChannel = (typeof IpcChannels)[keyof typeof IpcChannels]

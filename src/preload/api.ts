@@ -1,6 +1,7 @@
 import { ipcRenderer } from 'electron'
 import { IpcChannels } from '@shared/ipcChannels'
 import type {
+  AiStatus,
   Branch,
   Commit,
   DiffFile,
@@ -90,7 +91,15 @@ export const gitApi = {
     ipcRenderer.invoke(IpcChannels.prDiff, repoPath, number),
   createPullRequest: (
     repoPath: string,
-    opts: { title: string; body: string; base: string; draft?: boolean }
+    opts: {
+      title: string
+      body: string
+      base: string
+      head?: string
+      draft?: boolean
+      reviewers?: string[]
+      labels?: string[]
+    }
   ): Promise<GitResult<PullRequest>> => ipcRenderer.invoke(IpcChannels.prCreate, repoPath, opts),
   mergePullRequest: (
     repoPath: string,
@@ -98,7 +107,14 @@ export const gitApi = {
     opts: { method: PrMergeMethod; deleteBranch?: boolean }
   ): Promise<GitResult<void>> => ipcRenderer.invoke(IpcChannels.prMerge, repoPath, number, opts),
   closePullRequest: (repoPath: string, number: number): Promise<GitResult<void>> =>
-    ipcRenderer.invoke(IpcChannels.prClose, repoPath, number)
+    ipcRenderer.invoke(IpcChannels.prClose, repoPath, number),
+
+  generateCommitMessage: (repoPath: string): Promise<GitResult<string>> =>
+    ipcRenderer.invoke(IpcChannels.aiGenerateCommitMessage, repoPath),
+  getAiStatus: (): Promise<GitResult<AiStatus>> => ipcRenderer.invoke(IpcChannels.aiGetStatus),
+  setAiApiKey: (key: string): Promise<GitResult<void>> =>
+    ipcRenderer.invoke(IpcChannels.aiSetApiKey, key),
+  clearAiApiKey: (): Promise<GitResult<void>> => ipcRenderer.invoke(IpcChannels.aiClearApiKey)
 }
 
 export type GitApi = typeof gitApi

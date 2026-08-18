@@ -110,6 +110,12 @@ export interface CommitDetail {
   files: DiffFile[]
 }
 
+export interface AiStatus {
+  hasApiKey: boolean
+  cliAvailable: boolean
+  cliVersion?: string
+}
+
 export type PrState = 'open' | 'closed' | 'merged'
 export type PrStateFilter = PrState | 'all'
 export type PrMergeMethod = 'merge' | 'squash' | 'rebase'

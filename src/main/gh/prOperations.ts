@@ -78,9 +78,26 @@ async function run(repoPath: string, args: string[]): Promise<string> {
         'GH_NOT_AUTHENTICATED'
       )
     }
-    throw new GhCliError(stderr || `gh ${args[0]} failed`, 'GH_ERROR')
+    if (/no git remotes found|does not appear to be a git repository|unknown host/i.test(stderr)) {
+      throw new GhCliError(
+        'This repository has no GitHub remote that "gh" can resolve. Check "git remote -v".',
+        'GH_ERROR'
+      )
+    }
+    throw new GhCliError(stderr || `gh ${args[0]} failed (exit ${result.code})`, 'GH_ERROR')
   }
   return result.stdout.toString('utf-8')
+}
+
+function parseJson<T>(out: string, context: string): T {
+  try {
+    return JSON.parse(out) as T
+  } catch {
+    throw new GhCliError(
+      `Could not parse "gh"'s response while ${context}. Try running "gh --version" to confirm it's up to date.`,
+      'GH_ERROR'
+    )
+  }
 }
 
 export async function listPullRequests(
@@ -97,13 +114,13 @@ export async function listPullRequests(
     '--limit',
     '100'
   ])
-  const raw = JSON.parse(out) as RawPr[]
+  const raw = parseJson<RawPr[]>(out, 'listing pull requests')
   return raw.map(toPr)
 }
 
 export async function getPullRequest(repoPath: string, number: number): Promise<PullRequest> {
   const out = await run(repoPath, ['pr', 'view', String(number), '--json', VIEW_FIELDS])
-  return toPr(JSON.parse(out) as RawPr)
+  return toPr(parseJson<RawPr>(out, 'loading the pull request'))
 }
 
 export async function getPullRequestDiff(repoPath: string, number: number): Promise<DiffFile[]> {
@@ -113,10 +130,21 @@ export async function getPullRequestDiff(repoPath: string, number: number): Prom
 
 export async function createPullRequest(
   repoPath: string,
-  opts: { title: string; body: string; base: string; draft?: boolean }
+  opts: {
+    title: string
+    body: string
+    base: string
+    head?: string
+    draft?: boolean
+    reviewers?: string[]
+    labels?: string[]
+  }
 ): Promise<PullRequest> {
   const args = ['pr', 'create', '--title', opts.title, '--body', opts.body, '--base', opts.base]
+  if (opts.head) args.push('--head', opts.head)
   if (opts.draft) args.push('--draft')
+  if (opts.reviewers?.length) args.push('--reviewer', opts.reviewers.join(','))
+  if (opts.labels?.length) args.push('--label', opts.labels.join(','))
   const out = await run(repoPath, args)
   const match = out.trim().match(/\/pull\/(\d+)/)
   const number = match ? parseInt(match[1], 10) : NaN

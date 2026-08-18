@@ -3,6 +3,7 @@ import type { PrMergeMethod, PullRequest } from '@shared/types'
 import { useRepoStore } from '../../store/repoStore'
 import { usePrStore } from '../../store/prStore'
 import { Button } from '../common/Button'
+import { SearchableSelect } from '../common/SearchableSelect'
 
 const METHOD_LABEL: Record<PrMergeMethod, string> = {
   merge: 'Create a merge commit',
@@ -53,17 +54,15 @@ export function PrMergeControls({ pr }: { pr: PullRequest }): React.JSX.Element 
         </div>
       )}
       <div className="flex flex-wrap items-center gap-2">
-        <select
-          className="rounded border border-ide-border bg-ide-bg px-2 py-1.5 text-[12px] text-ide-text outline-none"
+        <SearchableSelect
+          className="w-52"
           value={method}
-          onChange={(e) => setMethod(e.target.value as PrMergeMethod)}
-        >
-          {(Object.keys(METHOD_LABEL) as PrMergeMethod[]).map((m) => (
-            <option key={m} value={m}>
-              {METHOD_LABEL[m]}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => setMethod(v as PrMergeMethod)}
+          options={(Object.keys(METHOD_LABEL) as PrMergeMethod[]).map((m) => ({
+            value: m,
+            label: METHOD_LABEL[m]
+          }))}
+        />
         <Button variant="primary" loading={isMutating} onClick={onMerge}>
           Merge Pull Request
         </Button>

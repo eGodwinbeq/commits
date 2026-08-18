@@ -25,7 +25,15 @@ interface PrState {
   close: (repoPath: string) => Promise<{ ok: true } | { ok: false; message: string }>
   create: (
     repoPath: string,
-    opts: { title: string; body: string; base: string; draft?: boolean }
+    opts: {
+      title: string
+      body: string
+      base: string
+      head?: string
+      draft?: boolean
+      reviewers?: string[]
+      labels?: string[]
+    }
   ) => Promise<{ ok: true; pr: PullRequest } | { ok: false; message: string }>
 }
 
@@ -92,7 +100,18 @@ export const usePrStore = create<PrState>((set, get) => ({
     return { ok: true }
   },
 
-  create: async (repoPath: string, opts: { title: string; body: string; base: string; draft?: boolean }) => {
+  create: async (
+    repoPath: string,
+    opts: {
+      title: string
+      body: string
+      base: string
+      head?: string
+      draft?: boolean
+      reviewers?: string[]
+      labels?: string[]
+    }
+  ) => {
     set({ isMutating: true })
     const result = await window.gitApi.createPullRequest(repoPath, opts)
     set({ isMutating: false })

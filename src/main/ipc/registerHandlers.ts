@@ -5,6 +5,7 @@ import { registerRepoHandlers } from './repoHandlers'
 import { registerGitReadHandlers } from './gitReadHandlers'
 import { registerGitWriteHandlers } from './gitWriteHandlers'
 import { registerPrHandlers } from './prHandlers'
+import { registerAiHandlers } from './aiHandlers'
 
 export function registerIpcHandlers(): void {
   ipcMain.handle(IpcChannels.appPing, () => 'pong')
@@ -14,4 +15,5 @@ export function registerIpcHandlers(): void {
   registerGitReadHandlers()
   registerGitWriteHandlers()
   registerPrHandlers()
+  registerAiHandlers()
 }

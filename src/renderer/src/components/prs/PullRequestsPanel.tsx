@@ -3,6 +3,7 @@ import type { PrStateFilter } from '@shared/types'
 import { useRepoStore } from '../../store/repoStore'
 import { usePrStore } from '../../store/prStore'
 import { Button } from '../common/Button'
+import { IconRefresh } from '../common/icons'
 import { PrListRow } from './PrListRow'
 import { PrDetailPanel } from './PrDetailPanel'
 import { CreatePrModal } from './CreatePrModal'
@@ -45,12 +46,15 @@ export function PullRequestsPanel(): React.JSX.Element {
               {f.label}
             </button>
           ))}
-          <Button
-            variant="primary"
-            className="ml-auto"
-            onClick={() => setShowCreate(true)}
-            disabled={!repoPath}
+          <button
+            className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded text-ide-textDim hover:bg-ide-hover hover:text-ide-text disabled:opacity-40"
+            title="Refresh"
+            disabled={!repoPath || isLoading}
+            onClick={() => repoPath && load(repoPath)}
           >
+            <IconRefresh className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+          <Button variant="primary" onClick={() => setShowCreate(true)} disabled={!repoPath}>
             New
           </Button>
         </div>
@@ -61,7 +65,15 @@ export function PullRequestsPanel(): React.JSX.Element {
           )}
           {error && (
             <div className="p-3 text-[12px] text-ide-red">
-              {error}
+              <div className="flex items-start justify-between gap-2">
+                <span>{error}</span>
+                <button
+                  className="shrink-0 text-ide-accent hover:underline"
+                  onClick={() => repoPath && load(repoPath)}
+                >
+                  Retry
+                </button>
+              </div>
               {errorCode === 'GH_NOT_FOUND' && (
                 <div className="mt-1 text-ide-textDim">
                   Install the GitHub CLI from{' '}
@@ -81,7 +93,7 @@ export function PullRequestsPanel(): React.JSX.Element {
               {errorCode === 'GH_NOT_AUTHENTICATED' && (
                 <div className="mt-1 text-ide-textDim">
                   Run <code className="text-ide-text">gh auth login</code> in a terminal, then
-                  refresh.
+                  retry.
                 </div>
               )}
             </div>
