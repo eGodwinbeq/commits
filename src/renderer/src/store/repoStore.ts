@@ -20,8 +20,11 @@ interface RepoState {
   recentRepos: string[]
   error: string | null
   isLoading: boolean
+  unsafeRepoPath: string | null
   openFolderDialog: () => Promise<void>
   openRepo: (path: string) => Promise<void>
+  trustUnsafeRepo: () => Promise<void>
+  dismissUnsafeRepo: () => void
   closeRepo: () => void
 }
 
@@ -31,6 +34,7 @@ export const useRepoStore = create<RepoState>((set, get) => ({
   recentRepos: loadRecent(),
   error: null,
   isLoading: false,
+  unsafeRepoPath: null,
 
   openFolderDialog: async () => {
     const path = await window.gitApi.openFolderDialog()
@@ -38,9 +42,13 @@ export const useRepoStore = create<RepoState>((set, get) => ({
   },
 
   openRepo: async (path: string) => {
-    set({ isLoading: true, error: null })
+    set({ isLoading: true, error: null, unsafeRepoPath: null })
     const result = await window.gitApi.validateRepo(path)
     if (!result.ok) {
+      if (result.error.code === 'UNSAFE_REPO' && result.error.path) {
+        set({ isLoading: false, unsafeRepoPath: result.error.path })
+        return
+      }
       set({ isLoading: false, error: result.error.message })
       return
     }
@@ -56,6 +64,21 @@ export const useRepoStore = create<RepoState>((set, get) => ({
       isLoading: false
     })
   },
+
+  trustUnsafeRepo: async () => {
+    const path = get().unsafeRepoPath
+    if (!path) return
+    set({ isLoading: true })
+    const result = await window.gitApi.trustDirectory(path)
+    if (!result.ok) {
+      set({ isLoading: false, error: result.error.message, unsafeRepoPath: null })
+      return
+    }
+    set({ unsafeRepoPath: null })
+    await get().openRepo(path)
+  },
+
+  dismissUnsafeRepo: () => set({ unsafeRepoPath: null }),
 
   closeRepo: () => set({ repoPath: null, repoName: null })
 }))

@@ -3,6 +3,7 @@ import { useBranchStore } from '../../store/branchStore'
 import { useRepoStore } from '../../store/repoStore'
 import { useUiStore } from '../../store/uiStore'
 import { invalidate } from '../../lib/invalidate'
+import type { Branch } from '@shared/types'
 
 export function BranchSwitcherPopup(): React.JSX.Element | null {
   const open = useUiStore((s) => s.branchSwitcherOpen)
@@ -21,9 +22,9 @@ export function BranchSwitcherPopup(): React.JSX.Element | null {
 
   if (!open) return null
 
-  const checkout = async (name: string): Promise<void> => {
+  const checkout = async (branch: Branch): Promise<void> => {
     if (!repoPath) return
-    const result = await window.gitApi.checkout(repoPath, name)
+    const result = await window.gitApi.checkout(repoPath, branch.name, branch.kind)
     if (!result.ok) window.alert(result.error.message)
     await invalidate(repoPath, ['log', 'branches', 'status'])
     setOpen(false)
@@ -43,7 +44,7 @@ export function BranchSwitcherPopup(): React.JSX.Element | null {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Escape') setOpen(false)
-            if (e.key === 'Enter' && filtered.length > 0) checkout(filtered[0].name)
+            if (e.key === 'Enter' && filtered.length > 0) checkout(filtered[0])
           }}
         />
         <div className="max-h-96 overflow-auto py-1">
@@ -51,7 +52,7 @@ export function BranchSwitcherPopup(): React.JSX.Element | null {
             <button
               key={b.refName}
               className="flex w-full items-center justify-between px-3 py-1.5 text-left text-[13px] hover:bg-ide-selected"
-              onClick={() => checkout(b.name)}
+              onClick={() => checkout(b)}
             >
               <span className={b.isHead ? 'font-semibold text-ide-accent' : 'text-ide-text'}>
                 {b.name}

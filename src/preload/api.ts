@@ -19,6 +19,8 @@ export const gitApi = {
     ipcRenderer.invoke(IpcChannels.repoOpenFolderDialog),
   validateRepo: (path: string): Promise<GitResult<RepoInfo>> =>
     ipcRenderer.invoke(IpcChannels.repoValidate, path),
+  trustDirectory: (path: string): Promise<GitResult<void>> =>
+    ipcRenderer.invoke(IpcChannels.repoTrustDirectory, path),
 
   getLog: (repoPath: string, opts?: { maxCount?: number; skip?: number }): Promise<GitResult<Commit[]>> =>
     ipcRenderer.invoke(IpcChannels.gitLog, repoPath, opts),
@@ -46,8 +48,11 @@ export const gitApi = {
   commit: (repoPath: string, message: string, opts?: { amend?: boolean }): Promise<GitResult<string>> =>
     ipcRenderer.invoke(IpcChannels.gitCommit, repoPath, message, opts),
 
-  checkout: (repoPath: string, ref: string): Promise<GitResult<string>> =>
-    ipcRenderer.invoke(IpcChannels.gitCheckout, repoPath, ref),
+  checkout: (
+    repoPath: string,
+    ref: string,
+    kind?: 'local' | 'remote' | 'tag'
+  ): Promise<GitResult<string>> => ipcRenderer.invoke(IpcChannels.gitCheckout, repoPath, ref, kind),
   createBranch: (
     repoPath: string,
     name: string,

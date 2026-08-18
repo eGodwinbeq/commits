@@ -1,6 +1,8 @@
 import { execGit } from './gitExecutor'
 import type { GitResult } from '@shared/types'
 
+type BranchKind = 'local' | 'remote' | 'tag'
+
 async function run(repoPath: string, args: string[]): Promise<GitResult<string>> {
   const result = await execGit(repoPath, args)
   if (result.code !== 0) {
@@ -36,7 +38,30 @@ export const commit = (repoPath: string, message: string, opts: { amend?: boolea
   return run(repoPath, args)
 }
 
-export const checkout = (repoPath: string, ref: string) => run(repoPath, ['checkout', ref])
+// Checking out a remote-tracking ref directly (e.g. `origin/feature-x`) leaves the repo in
+// detached HEAD - git only auto-creates a tracking local branch for the bare short name. So
+// for remote branches, resolve/create the matching local branch instead of checking out the
+// remote ref itself.
+export const checkout = async (
+  repoPath: string,
+  ref: string,
+  kind?: BranchKind
+): Promise<GitResult<string>> => {
+  if (kind === 'remote') {
+    const shortName = ref.includes('/') ? ref.slice(ref.indexOf('/') + 1) : ref
+    const localExists = await execGit(repoPath, [
+      'rev-parse',
+      '--verify',
+      '--quiet',
+      `refs/heads/${shortName}`
+    ])
+    if (localExists.code === 0) {
+      return run(repoPath, ['checkout', shortName])
+    }
+    return run(repoPath, ['checkout', '-b', shortName, '--track', ref])
+  }
+  return run(repoPath, ['checkout', ref])
+}
 
 export const createBranch = (
   repoPath: string,

@@ -35,7 +35,7 @@ export function BranchContextMenu({
     items.push({
       label: 'Checkout',
       disabled: branch.isHead,
-      onClick: () => run(() => window.gitApi.checkout(repoPath!, branch.name))
+      onClick: () => run(() => window.gitApi.checkout(repoPath!, branch.name, branch.kind))
     })
   }
 

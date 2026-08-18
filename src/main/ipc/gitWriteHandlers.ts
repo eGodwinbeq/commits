@@ -24,8 +24,10 @@ export function registerGitWriteHandlers(): void {
       gitOps.commit(repoPath, message, opts)
   )
 
-  ipcMain.handle(IpcChannels.gitCheckout, (_evt, repoPath: string, ref: string) =>
-    gitOps.checkout(repoPath, ref)
+  ipcMain.handle(
+    IpcChannels.gitCheckout,
+    (_evt, repoPath: string, ref: string, kind?: 'local' | 'remote' | 'tag') =>
+      gitOps.checkout(repoPath, ref, kind)
   )
   ipcMain.handle(
     IpcChannels.gitCreateBranch,

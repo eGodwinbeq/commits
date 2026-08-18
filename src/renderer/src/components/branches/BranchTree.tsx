@@ -28,7 +28,13 @@ function TreeNodeRow({
 
   const checkout = async (): Promise<void> => {
     if (!node.branch || !repoPath || node.branch.isHead) return
-    const result = await window.gitApi.checkout(repoPath, node.branch.name)
+    if (node.branch.kind === 'tag') {
+      const proceed = window.confirm(
+        `Checking out tag "${node.branch.name}" leaves you in a detached HEAD state (tags aren't branches). Continue?`
+      )
+      if (!proceed) return
+    }
+    const result = await window.gitApi.checkout(repoPath, node.branch.name, node.branch.kind)
     if (!result.ok) window.alert(result.error.message)
     await invalidate(repoPath, ['log', 'branches', 'status'])
   }

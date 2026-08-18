@@ -11,6 +11,7 @@ export interface GitResultErr {
     code: string
     message: string
     stderr?: string
+    path?: string
   }
 }
 

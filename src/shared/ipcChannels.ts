@@ -6,6 +6,7 @@ export const IpcChannels = {
   repoValidate: 'repo:validate',
   repoGetRecent: 'repo:getRecent',
   repoAddRecent: 'repo:addRecent',
+  repoTrustDirectory: 'repo:trustDirectory',
 
   gitLog: 'git:log',
   gitBranches: 'git:branches',

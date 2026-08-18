@@ -1,12 +1,14 @@
 import { useRepoStore } from '../../store/repoStore'
 import { Button } from '../common/Button'
 import { ThemeToggle } from '../common/ThemeToggle'
+import { UnsafeRepoModal } from './UnsafeRepoModal'
 
 export function WelcomeScreen(): React.JSX.Element {
   const { openFolderDialog, openRepo, recentRepos, error, isLoading } = useRepoStore()
 
   return (
     <div className="relative flex h-full flex-col items-center justify-center gap-4">
+      <UnsafeRepoModal />
       <div className="absolute right-3 top-3">
         <ThemeToggle />
       </div>
