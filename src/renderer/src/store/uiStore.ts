@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-type CenterTab = 'log' | 'changes' | 'activity'
+type CenterTab = 'log' | 'changes' | 'activity' | 'pullRequests'
 
 interface UiState {
   activeTab: CenterTab

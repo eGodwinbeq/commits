@@ -1,7 +1,7 @@
 import { execGit } from './gitExecutor'
 import type { DiffFile, DiffHunk, DiffLine } from '@shared/types'
 
-function parseUnifiedDiff(text: string): DiffFile[] {
+export function parseUnifiedDiff(text: string): DiffFile[] {
   const files: DiffFile[] = []
   const fileBlocks = text.split(/^diff --git /m).filter((b) => b.trim().length > 0)
 

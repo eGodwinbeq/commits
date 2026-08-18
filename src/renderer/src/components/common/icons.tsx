@@ -115,6 +115,41 @@ export function IconTag({ className = 'h-3.5 w-3.5' }: IconProps): React.JSX.Ele
   )
 }
 
+export function IconSearch({ className = 'h-3.5 w-3.5' }: IconProps): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" strokeWidth={1.7} />
+      <path d="m20 20-4.35-4.35" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" />
+    </svg>
+  )
+}
+
+export function IconClose({ className = 'h-3.5 w-3.5' }: IconProps): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" />
+    </svg>
+  )
+}
+
+export function IconPullRequest({ className = 'h-4 w-4' }: IconProps): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <circle cx="6" cy="6" r="2" stroke="currentColor" strokeWidth={1.7} />
+      <circle cx="6" cy="18" r="2" stroke="currentColor" strokeWidth={1.7} />
+      <circle cx="18" cy="9" r="2" stroke="currentColor" strokeWidth={1.7} />
+      <path d="M6 8v8" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" />
+      <path
+        d="M18 11v3a3 3 0 0 1-3 3h-3.5"
+        stroke="currentColor"
+        strokeWidth={1.7}
+        strokeLinecap="round"
+      />
+      <path d="m14 14 2.5 3-2.5 3" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 export function IconChevron({ className = 'h-3 w-3', open }: IconProps & { open: boolean }): React.JSX.Element {
   return (
     <svg

@@ -4,7 +4,7 @@ import { useRepoStore } from '../../store/repoStore'
 import { buildTree, type TreeNode } from './branchTreeUtils'
 import { BranchContextMenu } from './BranchContextMenu'
 import { invalidate } from '../../lib/invalidate'
-import { IconBranch, IconChevron, IconRemote, IconTag } from '../common/icons'
+import { IconBranch, IconChevron, IconClose, IconRemote, IconSearch, IconTag } from '../common/icons'
 import type { Branch } from '@shared/types'
 
 function TreeNodeRow({
@@ -12,15 +12,18 @@ function TreeNodeRow({
   depth,
   selectedRef,
   onSelect,
-  onContextMenu
+  onContextMenu,
+  forceExpanded
 }: {
   node: TreeNode
   depth: number
   selectedRef: string | null
   onSelect: (refName: string) => void
   onContextMenu: (e: React.MouseEvent, branch: Branch) => void
+  forceExpanded: boolean
 }): React.JSX.Element {
   const [expanded, setExpanded] = useState(false)
+  const isExpanded = expanded || forceExpanded
   const repoPath = useRepoStore((s) => s.repoPath)
   const hasChildren = node.children.size > 0
   const isHead = !!node.branch?.isHead
@@ -66,7 +69,7 @@ function TreeNodeRow({
         }}
       >
         {hasChildren ? (
-          <IconChevron open={expanded} className="h-3 w-3 shrink-0 text-ide-textDim" />
+          <IconChevron open={isExpanded} className="h-3 w-3 shrink-0 text-ide-textDim" />
         ) : (
           <span className="w-3 shrink-0" />
         )}
@@ -87,7 +90,7 @@ function TreeNodeRow({
         ) : null}
       </div>
       {hasChildren &&
-        expanded &&
+        isExpanded &&
         Array.from(node.children.values())
           .sort((a, b) => a.name.localeCompare(b.name))
           .map((child) => (
@@ -98,6 +101,7 @@ function TreeNodeRow({
               selectedRef={selectedRef}
               onSelect={onSelect}
               onContextMenu={onContextMenu}
+              forceExpanded={forceExpanded}
             />
           ))}
     </div>
@@ -110,7 +114,8 @@ function Section({
   branches,
   selectedRef,
   onSelect,
-  onContextMenu
+  onContextMenu,
+  forceExpanded
 }: {
   title: string
   icon: typeof IconBranch
@@ -118,8 +123,10 @@ function Section({
   selectedRef: string | null
   onSelect: (refName: string) => void
   onContextMenu: (e: React.MouseEvent, branch: Branch) => void
+  forceExpanded: boolean
 }): React.JSX.Element {
   const [expanded, setExpanded] = useState(false)
+  const isExpanded = expanded || forceExpanded
   const tree = useMemo(() => buildTree(branches), [branches])
 
   if (branches.length === 0) return <></>
@@ -130,12 +137,12 @@ function Section({
         className="flex cursor-pointer items-center gap-1.5 rounded-md px-1 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-ide-textDim hover:text-ide-text"
         onClick={() => setExpanded((e) => !e)}
       >
-        <IconChevron open={expanded} className="h-3 w-3 shrink-0" />
+        <IconChevron open={isExpanded} className="h-3 w-3 shrink-0" />
         <Icon className="h-3.5 w-3.5 shrink-0" />
         <span className="flex-1">{title}</span>
         <span className="text-[10px] font-medium text-ide-textDim/70">{branches.length}</span>
       </div>
-      {expanded &&
+      {isExpanded &&
         Array.from(tree.children.values())
           .sort((a, b) => a.name.localeCompare(b.name))
           .map((child) => (
@@ -146,6 +153,7 @@ function Section({
               selectedRef={selectedRef}
               onSelect={onSelect}
               onContextMenu={onContextMenu}
+              forceExpanded={forceExpanded}
             />
           ))}
     </div>
@@ -156,10 +164,13 @@ export function BranchTree(): React.JSX.Element {
   const branches = useBranchStore((s) => s.branches)
   const [menu, setMenu] = useState<{ x: number; y: number; branch: Branch } | null>(null)
   const [selectedRef, setSelectedRef] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
 
-  const local = branches.filter((b) => b.kind === 'local')
-  const remote = branches.filter((b) => b.kind === 'remote')
-  const tags = branches.filter((b) => b.kind === 'tag')
+  const q = query.trim().toLowerCase()
+  const filtered = q ? branches.filter((b) => b.name.toLowerCase().includes(q)) : branches
+  const local = filtered.filter((b) => b.kind === 'local')
+  const remote = filtered.filter((b) => b.kind === 'remote')
+  const tags = filtered.filter((b) => b.kind === 'tag')
   const head = currentBranchName(branches)
 
   const openMenu = (e: React.MouseEvent, branch: Branch): void => {
@@ -167,40 +178,70 @@ export function BranchTree(): React.JSX.Element {
   }
 
   return (
-    <div className="h-full overflow-auto py-2">
-      <Section
-        title="Local Branches"
-        icon={IconBranch}
-        branches={local}
-        selectedRef={selectedRef}
-        onSelect={setSelectedRef}
-        onContextMenu={openMenu}
-      />
-      <Section
-        title="Remotes"
-        icon={IconRemote}
-        branches={remote}
-        selectedRef={selectedRef}
-        onSelect={setSelectedRef}
-        onContextMenu={openMenu}
-      />
-      <Section
-        title="Tags"
-        icon={IconTag}
-        branches={tags}
-        selectedRef={selectedRef}
-        onSelect={setSelectedRef}
-        onContextMenu={openMenu}
-      />
-      {menu && (
-        <BranchContextMenu
-          x={menu.x}
-          y={menu.y}
-          branch={menu.branch}
-          currentBranchName={head}
-          onClose={() => setMenu(null)}
+    <div className="flex h-full flex-col">
+      <div className="shrink-0 px-2 pt-2">
+        <div className="flex items-center gap-1.5 rounded-md border border-ide-border bg-ide-bg px-2 py-1">
+          <IconSearch className="h-3.5 w-3.5 shrink-0 text-ide-textDim" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search branches…"
+            className="min-w-0 flex-1 bg-transparent text-[12px] text-ide-text outline-none placeholder:text-ide-textDim"
+          />
+          {query && (
+            <button
+              className="shrink-0 text-ide-textDim hover:text-ide-text"
+              onClick={() => setQuery('')}
+              aria-label="Clear search"
+            >
+              <IconClose className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="min-h-0 flex-1 overflow-auto py-2">
+        <Section
+          title="Local Branches"
+          icon={IconBranch}
+          branches={local}
+          selectedRef={selectedRef}
+          onSelect={setSelectedRef}
+          onContextMenu={openMenu}
+          forceExpanded={!!q}
         />
-      )}
+        <Section
+          title="Remotes"
+          icon={IconRemote}
+          branches={remote}
+          selectedRef={selectedRef}
+          onSelect={setSelectedRef}
+          onContextMenu={openMenu}
+          forceExpanded={!!q}
+        />
+        <Section
+          title="Tags"
+          icon={IconTag}
+          branches={tags}
+          selectedRef={selectedRef}
+          onSelect={setSelectedRef}
+          onContextMenu={openMenu}
+          forceExpanded={!!q}
+        />
+        {q && local.length === 0 && remote.length === 0 && tags.length === 0 && (
+          <div className="px-3 py-4 text-center text-[12px] text-ide-textDim">
+            No branches match &quot;{query}&quot;
+          </div>
+        )}
+        {menu && (
+          <BranchContextMenu
+            x={menu.x}
+            y={menu.y}
+            branch={menu.branch}
+            currentBranchName={head}
+            onClose={() => setMenu(null)}
+          />
+        )}
+      </div>
     </div>
   )
 }

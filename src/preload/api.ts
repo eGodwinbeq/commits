@@ -5,6 +5,9 @@ import type {
   Commit,
   DiffFile,
   GitResult,
+  PrMergeMethod,
+  PrStateFilter,
+  PullRequest,
   RepoInfo,
   RepoStatus,
   Theme
@@ -77,7 +80,25 @@ export const gitApi = {
     opts: { remote: string; branch: string; rebase?: boolean }
   ): Promise<GitResult<string>> => ipcRenderer.invoke(IpcChannels.gitPull, repoPath, opts),
   fetch: (repoPath: string, remote?: string): Promise<GitResult<string>> =>
-    ipcRenderer.invoke(IpcChannels.gitFetch, repoPath, remote)
+    ipcRenderer.invoke(IpcChannels.gitFetch, repoPath, remote),
+
+  listPullRequests: (repoPath: string, state?: PrStateFilter): Promise<GitResult<PullRequest[]>> =>
+    ipcRenderer.invoke(IpcChannels.prList, repoPath, state),
+  getPullRequest: (repoPath: string, number: number): Promise<GitResult<PullRequest>> =>
+    ipcRenderer.invoke(IpcChannels.prGet, repoPath, number),
+  getPullRequestDiff: (repoPath: string, number: number): Promise<GitResult<DiffFile[]>> =>
+    ipcRenderer.invoke(IpcChannels.prDiff, repoPath, number),
+  createPullRequest: (
+    repoPath: string,
+    opts: { title: string; body: string; base: string; draft?: boolean }
+  ): Promise<GitResult<PullRequest>> => ipcRenderer.invoke(IpcChannels.prCreate, repoPath, opts),
+  mergePullRequest: (
+    repoPath: string,
+    number: number,
+    opts: { method: PrMergeMethod; deleteBranch?: boolean }
+  ): Promise<GitResult<void>> => ipcRenderer.invoke(IpcChannels.prMerge, repoPath, number, opts),
+  closePullRequest: (repoPath: string, number: number): Promise<GitResult<void>> =>
+    ipcRenderer.invoke(IpcChannels.prClose, repoPath, number)
 }
 
 export type GitApi = typeof gitApi

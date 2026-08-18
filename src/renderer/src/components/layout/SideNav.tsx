@@ -1,10 +1,11 @@
 import { useUiStore } from '../../store/uiStore'
-import { IconActivity, IconChanges, IconLog } from '../common/icons'
+import { IconActivity, IconChanges, IconLog, IconPullRequest } from '../common/icons'
 import { useStatusStore } from '../../store/statusStore'
 
 const ITEMS = [
   { key: 'changes', label: 'Changes', icon: IconChanges },
   { key: 'log', label: 'Log', icon: IconLog },
+  { key: 'pullRequests', label: 'Pull Requests', icon: IconPullRequest },
   { key: 'activity', label: 'Activity', icon: IconActivity }
 ] as const
 

@@ -14,6 +14,7 @@ import { CommitLogTable } from './components/log/CommitLogTable'
 import { ChangesPanel } from './components/changes/ChangesPanel'
 import { DiffViewer } from './components/diff/DiffViewer'
 import { ActivityView } from './components/activity/ActivityView'
+import { PullRequestsPanel } from './components/prs/PullRequestsPanel'
 import { useAutoRefresh } from './lib/useAutoRefresh'
 import { ResizeHandle } from './components/common/ResizeHandle'
 
@@ -60,9 +61,10 @@ function RepoWorkspace(): React.JSX.Element {
           {activeTab === 'log' && <CommitLogTable />}
           {activeTab === 'changes' && <ChangesPanel />}
           {activeTab === 'activity' && <ActivityView />}
+          {activeTab === 'pullRequests' && <PullRequestsPanel />}
         </div>
 
-        {activeTab !== 'activity' && (
+        {activeTab !== 'activity' && activeTab !== 'pullRequests' && (
           <>
             <ResizeHandle onResize={(dx) => setDiffWidth((w) => clamp(w - dx, 280, 900))} />
 

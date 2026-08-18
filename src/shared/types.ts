@@ -109,3 +109,26 @@ export interface CommitDetail {
   commit: Commit
   files: DiffFile[]
 }
+
+export type PrState = 'open' | 'closed' | 'merged'
+export type PrStateFilter = PrState | 'all'
+export type PrMergeMethod = 'merge' | 'squash' | 'rebase'
+
+export interface PullRequest {
+  number: number
+  title: string
+  body: string
+  author: string
+  state: PrState
+  isDraft: boolean
+  headRefName: string
+  baseRefName: string
+  url: string
+  createdAt: string
+  updatedAt: string
+  mergeable: 'MERGEABLE' | 'CONFLICTING' | 'UNKNOWN'
+  reviewDecision?: string
+  additions: number
+  deletions: number
+  changedFiles: number
+}

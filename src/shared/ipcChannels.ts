@@ -29,7 +29,14 @@ export const IpcChannels = {
   gitRebase: 'git:rebase',
   gitPush: 'git:push',
   gitPull: 'git:pull',
-  gitFetch: 'git:fetch'
+  gitFetch: 'git:fetch',
+
+  prList: 'pr:list',
+  prGet: 'pr:get',
+  prDiff: 'pr:diff',
+  prCreate: 'pr:create',
+  prMerge: 'pr:merge',
+  prClose: 'pr:close'
 } as const
 
 export type IpcChannel = (typeof IpcChannels)[keyof typeof IpcChannels]
