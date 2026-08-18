@@ -41,7 +41,9 @@ export const IpcChannels = {
   aiGenerateCommitMessage: 'ai:generateCommitMessage',
   aiGetStatus: 'ai:getStatus',
   aiSetApiKey: 'ai:setApiKey',
-  aiClearApiKey: 'ai:clearApiKey'
+  aiClearApiKey: 'ai:clearApiKey',
+  aiTestClaudeCli: 'ai:testClaudeCli',
+  aiLaunchClaudeSignIn: 'ai:launchClaudeSignIn'
 } as const
 
 export type IpcChannel = (typeof IpcChannels)[keyof typeof IpcChannels]

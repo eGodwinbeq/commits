@@ -6,19 +6,21 @@ export interface ExecClaudeResult {
   code: number | null
 }
 
-const TIMEOUT_MS = 60_000
+const DEFAULT_TIMEOUT_MS = 60_000
 
 /** Runs the Claude Code CLI in non-interactive print mode, feeding `stdinInput` as the
  * subject material and `prompt` as the instruction. Relies entirely on whatever auth the
- * user's local `claude` install already has - the app never touches API keys. */
+ * resolved `claude` install already has - the app never touches API keys for this path. */
 export function execClaude(
-  repoPath: string,
+  binPath: string,
+  cwd: string,
   prompt: string,
-  stdinInput: string
+  stdinInput: string,
+  timeoutMs = DEFAULT_TIMEOUT_MS
 ): Promise<ExecClaudeResult> {
   return new Promise((resolve, reject) => {
-    const child = spawn('claude', ['-p', prompt], {
-      cwd: repoPath,
+    const child = spawn(binPath, ['-p', prompt], {
+      cwd,
       windowsHide: true,
       env: { ...process.env }
     })
@@ -28,8 +30,8 @@ export function execClaude(
 
     const timer = setTimeout(() => {
       child.kill()
-      reject(new Error(`claude timed out after ${TIMEOUT_MS}ms`))
-    }, TIMEOUT_MS)
+      reject(new Error(`claude timed out after ${timeoutMs}ms`))
+    }, timeoutMs)
 
     child.stdout.on('data', (chunk: Buffer) => stdoutChunks.push(chunk))
     child.stderr.on('data', (chunk: Buffer) => stderrChunks.push(chunk))

@@ -114,6 +114,7 @@ export interface AiStatus {
   hasApiKey: boolean
   cliAvailable: boolean
   cliVersion?: string
+  cliPath?: string
 }
 
 export type PrState = 'open' | 'closed' | 'merged'

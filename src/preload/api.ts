@@ -114,7 +114,10 @@ export const gitApi = {
   getAiStatus: (): Promise<GitResult<AiStatus>> => ipcRenderer.invoke(IpcChannels.aiGetStatus),
   setAiApiKey: (key: string): Promise<GitResult<void>> =>
     ipcRenderer.invoke(IpcChannels.aiSetApiKey, key),
-  clearAiApiKey: (): Promise<GitResult<void>> => ipcRenderer.invoke(IpcChannels.aiClearApiKey)
+  clearAiApiKey: (): Promise<GitResult<void>> => ipcRenderer.invoke(IpcChannels.aiClearApiKey),
+  testClaudeCli: (): Promise<GitResult<string>> => ipcRenderer.invoke(IpcChannels.aiTestClaudeCli),
+  launchClaudeSignIn: (): Promise<GitResult<void>> =>
+    ipcRenderer.invoke(IpcChannels.aiLaunchClaudeSignIn)
 }
 
 export type GitApi = typeof gitApi

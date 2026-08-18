@@ -1,5 +1,6 @@
 import { execClaude } from './claudeExecutor'
 import { callAnthropicMessages } from './anthropicClient'
+import { detectClaudeCli } from './detectClaude'
 import { getApiKey } from '../ai/aiSettings'
 import { getWorkingDiffText } from '../git/gitDiff'
 
@@ -46,14 +47,22 @@ export async function generateCommitMessage(repoPath: string): Promise<string> {
     }
   }
 
+  const cli = await detectClaudeCli()
+  if (!cli.available || !cli.path) {
+    throw new ClaudeCliError(
+      'No AI connection configured. Add an Anthropic API key or connect Claude Code in Settings.',
+      'CLAUDE_NOT_CONFIGURED'
+    )
+  }
+
   let result: Awaited<ReturnType<typeof execClaude>>
   try {
-    result = await execClaude(repoPath, INSTRUCTION, diffPayload)
+    result = await execClaude(cli.path, repoPath, INSTRUCTION, diffPayload)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     if (/ENOENT/.test(message)) {
       throw new ClaudeCliError(
-        'No AI connection configured. Add an Anthropic API key or install the Claude Code CLI in Settings.',
+        'No AI connection configured. Add an Anthropic API key or connect Claude Code in Settings.',
         'CLAUDE_NOT_CONFIGURED'
       )
     }
