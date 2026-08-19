@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useLogStore } from '../../store/logStore'
-import { useBranchStore } from '../../store/branchStore'
+import { useBranchStore, currentBranchName } from '../../store/branchStore'
 import { useRepoStore } from '../../store/repoStore'
 import { SearchableSelect } from '../common/SearchableSelect'
 import { IconClose, IconSearch } from '../common/icons'
@@ -8,21 +8,23 @@ import { IconClose, IconSearch } from '../common/icons'
 export function LogFilterBar(): React.JSX.Element {
   const repoPath = useRepoStore((s) => s.repoPath)
   const commits = useLogStore((s) => s.commits)
-  const branch = useLogStore((s) => s.branch)
+  const branchFilter = useLogStore((s) => s.branchFilter)
   const filters = useLogStore((s) => s.filters)
-  const setBranch = useLogStore((s) => s.setBranch)
+  const setBranchFilter = useLogStore((s) => s.setBranchFilter)
   const setFilters = useLogStore((s) => s.setFilters)
   const clearFilters = useLogStore((s) => s.clearFilters)
   const branches = useBranchStore((s) => s.branches)
+  const head = currentBranchName(branches)
 
   const branchOptions = useMemo(
     () => [
-      { value: '', label: 'All branches' },
+      { value: 'current', label: head ? `Current branch (${head})` : 'Current branch' },
+      { value: 'all', label: 'All branches' },
       ...branches
         .filter((b) => b.kind !== 'tag')
         .map((b) => ({ value: b.name, label: b.name, description: b.kind }))
     ],
-    [branches]
+    [branches, head]
   )
 
   const authorOptions = useMemo(() => {
@@ -41,7 +43,11 @@ export function LogFilterBar(): React.JSX.Element {
   }, [commits])
 
   const hasActiveFilters =
-    !!filters.search || !!filters.authorEmail || !!filters.since || !!filters.until || !!branch
+    !!filters.search ||
+    !!filters.authorEmail ||
+    !!filters.since ||
+    !!filters.until ||
+    branchFilter !== 'current'
 
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-ide-border px-2 py-1.5">
@@ -56,9 +62,9 @@ export function LogFilterBar(): React.JSX.Element {
       </div>
 
       <SearchableSelect
-        className="w-40"
-        value={branch ?? ''}
-        onChange={(v) => repoPath && setBranch(repoPath, v || null)}
+        className="w-48"
+        value={branchFilter}
+        onChange={(v) => repoPath && setBranchFilter(repoPath, v)}
         options={branchOptions}
       />
 
@@ -90,7 +96,7 @@ export function LogFilterBar(): React.JSX.Element {
           className="flex items-center gap-1 rounded px-2 py-1 text-[12px] text-ide-textDim hover:bg-ide-hover hover:text-ide-text"
           onClick={() => {
             clearFilters()
-            if (repoPath && branch) setBranch(repoPath, null)
+            if (repoPath && branchFilter !== 'current') setBranchFilter(repoPath, 'current')
           }}
         >
           <IconClose className="h-3 w-3" />

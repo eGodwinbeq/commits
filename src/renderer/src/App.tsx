@@ -32,9 +32,12 @@ function RepoWorkspace(): React.JSX.Element {
 
   useEffect(() => {
     if (!repoPath) return
-    loadLog(repoPath)
-    loadBranches(repoPath)
-    loadStatus(repoPath)
+    // Branches must resolve first: the log's default "current branch" filter reads HEAD
+    // from the branch store, so loading it after (or in parallel with) the log would race.
+    loadBranches(repoPath).then(() => {
+      loadLog(repoPath)
+      loadStatus(repoPath)
+    })
   }, [repoPath])
 
   useAutoRefresh(repoPath)
