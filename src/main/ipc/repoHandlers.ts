@@ -2,7 +2,7 @@ import { BrowserWindow, dialog, ipcMain } from 'electron'
 import { IpcChannels } from '@shared/ipcChannels'
 import type { GitResult, RepoInfo } from '@shared/types'
 import { execGit } from '../git/gitExecutor'
-import { basename } from 'path'
+import { basename, normalize } from 'path'
 import { homedir } from 'os'
 
 const DUBIOUS_OWNERSHIP_RE = /detected dubious ownership in repository at '([^']+)'/i
@@ -32,7 +32,7 @@ async function validateRepo(path: string): Promise<GitResult<RepoInfo>> {
       }
     }
   }
-  const root = result.stdout.toString('utf-8').trim().replace(/\//g, '\\')
+  const root = normalize(result.stdout.toString('utf-8').trim())
   return { ok: true, data: { path: root, name: basename(root) } }
 }
 

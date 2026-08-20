@@ -20,25 +20,25 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "electron-updater": "^6.3.9",
-    "electron-store": "^10.0.1",
-    "zustand": "^5.0.3",
     "@tanstack/react-virtual": "^3.13.0",
+    "electron-store": "^10.0.1",
+    "electron-updater": "^6.3.9",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-ts": "^3.0.0",
-    "@electron-toolkit/tsconfig": "^1.0.1",
     "@electron-toolkit/preload": "^3.0.1",
+    "@electron-toolkit/tsconfig": "^1.0.1",
     "@electron-toolkit/utils": "^4.0.0",
     "@types/node": "^22.13.0",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
-    "electron": "^34.0.0",
-    "electron-builder": "^25.1.8",
+    "electron": "^43.4.1",
+    "electron-builder": "^26.15.3",
     "electron-vite": "^3.0.0",
     "eslint": "^9.19.0",
     "postcss": "^8.5.1",

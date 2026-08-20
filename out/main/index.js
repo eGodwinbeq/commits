@@ -1,5 +1,5 @@
 import { app, session, ipcMain, BrowserWindow, shell, dialog, safeStorage } from "electron";
-import { join, basename } from "path";
+import { join, normalize, basename } from "path";
 import { spawn, execFile } from "child_process";
 import { homedir } from "os";
 import https from "https";
@@ -264,7 +264,7 @@ async function validateRepo(path) {
       }
     };
   }
-  const root = result.stdout.toString("utf-8").trim().replace(/\//g, "\\");
+  const root = normalize(result.stdout.toString("utf-8").trim());
   return { ok: true, data: { path: root, name: basename(root) } };
 }
 async function getCommitCount(path) {
